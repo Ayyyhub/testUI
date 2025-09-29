@@ -1,0 +1,20 @@
+#日志封装
+
+from loguru import logger
+import os
+
+# 确保logs目录存在
+os.makedirs("logs", exist_ok=True)
+
+# 配置日志
+logger.add(
+    "logs/auto_test_{time:YYYY-MM-DD}.log",
+    rotation="500 MB",  # 文件过大自动轮转
+    retention="7 days",  # 保留最近7天的日志文件，超过则自动删除
+    level="INFO",
+    format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {module}:{function}:{line} - {message}",
+    encoding="utf-8"
+)
+
+# 导出logger供全局使用
+__all__ = ["logger"]

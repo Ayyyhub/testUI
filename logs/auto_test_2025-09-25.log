@@ -1,0 +1,63 @@
+2025-09-25 19:36:33 | INFO | test_main:main:23 - === 开始执行登录测试 ===
+2025-09-25 19:36:38 | INFO | test_main:main:27 - === 开始执行创建模型测试 ===
+2025-09-25 19:36:38 | INFO | test_createmodel:test_create_model_test:10 - 开始创建模型测试...
+2025-09-25 19:36:44 | ERROR | test_createmodel:test_create_model_test:30 - 创建模型测试失败: Message: element not interactable
+  (Session info: chrome=138.0.7204.94)
+Stacktrace:
+	GetHandleVerifier [0x0x7ff7b252d215+77093]
+	GetHandleVerifier [0x0x7ff7b252d270+77184]
+	(No symbol) [0x0x7ff7b230985c]
+	(No symbol) [0x0x7ff7b2361404]
+	(No symbol) [0x0x7ff7b2352f68]
+	(No symbol) [0x0x7ff7b23880ea]
+	(No symbol) [0x0x7ff7b2352816]
+	(No symbol) [0x0x7ff7b2388300]
+	(No symbol) [0x0x7ff7b23b0487]
+	(No symbol) [0x0x7ff7b2387ec3]
+	(No symbol) [0x0x7ff7b2350866]
+	(No symbol) [0x0x7ff7b2351dc3]
+	GetHandleVerifier [0x0x7ff7b280dd0d+3094557]
+	GetHandleVerifier [0x0x7ff7b280810d+3071005]
+	GetHandleVerifier [0x0x7ff7b2826a4d+3196253]
+	GetHandleVerifier [0x0x7ff7b2546e7e+182670]
+	GetHandleVerifier [0x0x7ff7b254ea7f+214415]
+	GetHandleVerifier [0x0x7ff7b2535b14+112164]
+	GetHandleVerifier [0x0x7ff7b2535cc9+112601]
+	GetHandleVerifier [0x0x7ff7b251d008+11032]
+	BaseThreadInitThunk [0x0x7ffe7b767374+20]
+	RtlUserThreadStart [0x0x7ffe7cebcc91+33]
+
+2025-09-25 19:36:44 | INFO | test_main:main:34 - === 所有测试执行完成 ===
+2025-09-25 19:37:07 | INFO | test_main:main:23 - === 开始执行登录测试 ===
+2025-09-25 19:37:11 | INFO | login:test_login:112 - 登录成功，等待页面加载...
+2025-09-25 19:37:13 | INFO | login:test_login:117 - 登录成功，准备调用move_test.py...
+2025-09-25 19:37:13 | INFO | login:test_login:120 - 请不要关闭浏览器，move_test.py将继续使用当前会话
+2025-09-25 19:37:13 | INFO | test_main:main:27 - === 开始执行创建模型测试 ===
+2025-09-25 19:37:13 | INFO | test_createmodel:test_create_model_test:10 - 开始创建模型测试...
+2025-09-25 19:37:13 | ERROR | test_createmodel:test_create_model_test:30 - 创建模型测试失败: Message: element not interactable
+  (Session info: chrome=138.0.7204.94)
+Stacktrace:
+	GetHandleVerifier [0x0x7ff7b252d215+77093]
+	GetHandleVerifier [0x0x7ff7b252d270+77184]
+	(No symbol) [0x0x7ff7b230985c]
+	(No symbol) [0x0x7ff7b2361404]
+	(No symbol) [0x0x7ff7b2352f68]
+	(No symbol) [0x0x7ff7b23880ea]
+	(No symbol) [0x0x7ff7b2352816]
+	(No symbol) [0x0x7ff7b2388300]
+	(No symbol) [0x0x7ff7b23b0487]
+	(No symbol) [0x0x7ff7b2387ec3]
+	(No symbol) [0x0x7ff7b2350866]
+	(No symbol) [0x0x7ff7b2351dc3]
+	GetHandleVerifier [0x0x7ff7b280dd0d+3094557]
+	GetHandleVerifier [0x0x7ff7b280810d+3071005]
+	GetHandleVerifier [0x0x7ff7b2826a4d+3196253]
+	GetHandleVerifier [0x0x7ff7b2546e7e+182670]
+	GetHandleVerifier [0x0x7ff7b254ea7f+214415]
+	GetHandleVerifier [0x0x7ff7b2535b14+112164]
+	GetHandleVerifier [0x0x7ff7b2535cc9+112601]
+	GetHandleVerifier [0x0x7ff7b251d008+11032]
+	BaseThreadInitThunk [0x0x7ffe7b767374+20]
+	RtlUserThreadStart [0x0x7ffe7cebcc91+33]
+
+2025-09-25 19:37:13 | INFO | test_main:main:34 - === 所有测试执行完成 ===

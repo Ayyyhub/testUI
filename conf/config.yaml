@@ -1,0 +1,31 @@
+
+# 测试账号
+test_user:
+  username: "AE1"
+  password: "PeiTian_admin1"
+
+#数据驱动自动化测试文件存放位置
+
+excell_path:
+  "D:/AE_PythonProject/testUI/testcases/data/test_data.xlsx"
+
+# 测试配置
+test:
+  base_url: "https://your-ae-platform.com"
+  timeout: 30
+  headless: false
+
+# Excel数据配置
+excel:
+  data_path: "data/test_cases"
+  default_sheet: "test_cases"
+
+# 浏览器配置
+browser:
+  type: "chrome"
+  window_size: "1920x1080"
+
+# 报告配置
+report:
+  format: "html"
+  output_path: "reports/html"
