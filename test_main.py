@@ -9,7 +9,7 @@ from utils.excell_reader import Excellreader, TestData
 # 添加当前目录到Python路径
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-from testcases import login
+from testcases import test_login
 from testcases import test_createmodel
 from core.logger import logger
 from testcases.test_newcreate import TestNewCreate  # 导入类，不是直接导入方法
@@ -24,7 +24,7 @@ def main():
     try:
         # 1. 执行登录测试
         logger.info("=== 开始执行登录测试 ===")
-        login.test_login(driver)  # 这会返回浏览器驱动
+        test_login.test_login_func(driver)  # 这会返回浏览器驱动
 
         # 2. 执行创建模型测试（使用同一个driver）
         logger.info("=== 开始执行创建模型测试 ===")

@@ -1,9 +1,7 @@
-import os
-
 import pytest
 from core.logger import logger
 from pages.base_page import BasePase
-from pages.read_test_data import UITestExecutor
+from core.read_test_data import UITestExecutor
 from utils.excell_reader import Excellreader, TestData
 # from basepage import BaseTest
 from utils.conf_reader import load_config

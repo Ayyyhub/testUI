@@ -9,7 +9,7 @@ import os
 import yaml
 # 导入init.py中的初始化函数
 from core.browser_engine import BrowserEngine
-# login.py 开头
+# test_login.py 开头
 from core.logger import logger  # 导入封装好的 logger
 from utils.conf_reader import load_config
 # print(sys.executable)
@@ -17,7 +17,7 @@ from utils.conf_reader import load_config
 # logger = logging.getLogger(__name__)
 
 
-def test_login(driver):
+def test_login_func(driver):
 
 
     # browser_engine = BrowserEngine()

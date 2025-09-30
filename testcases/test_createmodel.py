@@ -5,57 +5,7 @@ from selenium.webdriver.support import expected_conditions as EC
 # 导入init.py中的初始化函数
 from core.browser_engine import BrowserEngine
 from core.logger import logger  # 导入封装好的 logger
-
-
-def set_x_length_by_css_hierarchy(driver):
-    try:
-        # 2. 逐层定位元素（从外层到内层）
-        # 步骤1：定位最外层的 el-form-item 容器
-        outer_form = driver.find_element(
-            By.CSS_SELECTOR,
-            "div.el-form-item.asterisk-left.el-form-item--label-right"
-        )
-
-        # 步骤2：在 outer_form 内，定位 el-form-item__content
-        form_content = outer_form.find_element(
-            By.CSS_SELECTOR,
-            "div.el-form-item__content"
-        )
-
-        # 步骤3：在 form_content 内，定位 el-input-number
-        input_number = form_content.find_element(
-            By.CSS_SELECTOR,
-            "div.el-input-number"
-        )
-
-        # 步骤4：在 input_number 内，定位 el-input
-        el_input = input_number.find_element(
-            By.CSS_SELECTOR,
-            "div.el-input"
-        )
-
-        # 步骤5：在 el_input 内，定位目标输入框 el-input__inner
-        target_input = el_input.find_element(
-            By.CSS_SELECTOR,
-            "input.el-input__inner"
-        )
-
-        # 3. 修改输入框的值为 2500
-        target_input.clear()  # 清空原有值（若需保留可跳过）
-        target_input.send_keys("2500")  # 输入新值
-
-        # （可选）用 JavaScript 强制设置值（确保值被立即修改）
-        # driver.execute_script("arguments[0].value = '2500';", target_input)
-
-        # 验证结果（打印输入框当前值）
-        print("输入框当前值：", target_input.get_attribute("value"))
-
-    except Exception as e:
-        print(f"定位过程出错：{e}")
-    # finally:
-    #     driver.quit()  # 无论是否出错，最终关闭浏览器
-
-
+from pages.base_page import set_x_length_by_css_hierarchy
 
 
 def test_createmodel_func(driver):

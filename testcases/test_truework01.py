@@ -1,11 +1,7 @@
-import os
-
-import pytest
-from selenium.webdriver.common.by import By
-
-from pages.read_test_data import UITestExecutor
+from core.read_test_data import UITestExecutor
 from utils.conf_reader import load_config
-from utils.excell_reader import Excellreader, TestData
+from utils.excell_reader import Excellreader
+
 
 class Test_truework01:
 
