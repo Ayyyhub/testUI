@@ -3,7 +3,7 @@ import sys
 import os
 
 from core.browser_engine import BrowserEngine
-from testcases.test_truework01 import Test_truework01
+from testcases.test_workflow01 import Test_truework01
 from utils.excell_reader import TestData
 from utils.excell_reader import Excellreader, TestData
 # 添加当前目录到Python路径
@@ -15,12 +15,9 @@ from core.logger import logger
 from testcases.test_newcreate import TestNewCreate  # 导入类，不是直接导入方法
 
 
-def main():
+def main(browser):
     """主测试流程"""
-    #driver = None
-    browser_engine = BrowserEngine()
-    # 使用init.py中的函数初始化浏览器驱动
-    driver = browser_engine.initialize_driver()
+    driver = browser
     try:
         # 1. 执行登录测试
         logger.info("=== 开始执行登录测试 ===")
@@ -37,6 +34,7 @@ def main():
         test_newcreate_shili.run_all_tests(driver)  # 调用实例方法
 
         #4. 从excell开始truework
+        logger.info("=== 开始执行work_flow01 ===")
         test_truework_shili= Test_truework01()
         test_truework_shili.test_truework01_func(driver)
 
@@ -54,4 +52,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    pytest.main(["-s", "test_main.py"])
