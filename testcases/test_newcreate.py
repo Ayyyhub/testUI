@@ -2,25 +2,20 @@ import pytest
 from core.logger import logger
 from pages.base_page import BasePase
 from core.read_test_data import UITestExecutor
-from utils.excell_reader import Excellreader, TestData
+from utils.excell_reader import Excellreader, AETestData
 # from basepage import BaseTest
 from utils.conf_reader import load_config
 
-class TestNewCreate:
+class Test_NewCreate:
 
     config = load_config()
     excell_path=config['excell_path']
-
-    # # 建议先检查文件是否存在（可选，增强健壮性）
-    # excell_path = "D:/AE_PythonProject/testUI/testcases/data/test_data.xlsx"
-    # if not os.path.exists(excell_path):
-    #     raise FileNotFoundError(f"测试数据文件不存在：{excell_path}")
 
     @pytest.mark.parametrize("test_data", [
         pytest.param(data, id=data.test_case_id)
         for data in Excellreader(excell_path).get_test_data(sheet_name="newcreate")
     ])
-    def test_new_create_func(self,test_data: TestData, driver):
+    def test_newcreate_func(self,test_data: AETestData, driver):
 
         """数据驱动登录测试"""
         if not test_data:
@@ -37,9 +32,14 @@ class TestNewCreate:
         for step in test_data:
             print(f"步骤 {step.step_id}: {step.status} - {step.outputed_result}")
 
+
+
     def run_all_tests(self, driver):
+
+        self.driver = driver  # 保存driver到实例，后续用self.driver,如果后续有其他方法在同一个类下，无需再传 driver 参数
+
         """直接调用执行所有测试用例（非pytest环境使用）"""
-        test_data_list1 = Excellreader(TestNewCreate.excell_path).get_test_data(sheet_name="newcreate")
+        test_data_list1 = Excellreader(Test_NewCreate.excell_path).get_test_data(sheet_name="newcreate")
         for test_data in test_data_list1:
             if test_data:
                 print(f"执行测试用例: {test_data.description}")

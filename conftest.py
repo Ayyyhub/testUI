@@ -39,18 +39,18 @@ def retry(attempts=3, delay=2):
     return decorator
 
 @pytest.fixture(scope="session")
-def browser():
+def driver():
     """初始化浏览器驱动并返回driver实例"""
     browser_engine = BrowserEngine()
     driver = browser_engine.initialize_driver()
     yield driver
     driver.quit()
 
-# 增强版自动日志记录fixture
-@pytest.fixture(autouse=True)
-def auto_logger(request):
-    logger.info(f"开始执行测试用例: {request.node.name}")
-    start_time = time.time()
-    yield
-    duration = time.time() - start_time
-    logger.info(f"测试用例 {request.node.name} 执行完成，耗时: {duration:.2f}秒")
+# # 增强版自动日志记录fixture
+# @pytest.fixture(autouse=True)
+# def auto_logger(request):
+#     logger.info(f"开始执行测试用例: {request.node.name}")
+#     start_time = time.time()
+#     yield
+#     duration = time.time() - start_time
+#     logger.info(f"测试用例 {request.node.name} 执行完成，耗时: {duration:.2f}秒")

@@ -10,9 +10,13 @@ class Test_truework01:
     #     for data in Excellreader(excell_path).get_test_data(sheet_name="truework")
     # ])
     def test_truework01_func(self,driver):
+
+        self.driver = driver  # 保存driver到实例，后续用self.driver,如果后续有其他方法在同一个类下，无需再传 driver 参数
+
         config = load_config()
         excell_path = config['excell_path']
-        test_data_list2=Excellreader.get_test_data(sheet_name="truework")
+        excell_reader = Excellreader(excell_path)
+        test_data_list2=excell_reader.get_test_data(sheet_name="workflow01")
         for data in test_data_list2:
             if data:
                 print(f"执行测试用例：{data}")

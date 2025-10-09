@@ -1,36 +1,39 @@
-#import logging
 import sys
 import os
+import pytest
 
+from conftest import driver
 from core.browser_engine import BrowserEngine
 from testcases.test_workflow01 import Test_truework01
-from utils.excell_reader import TestData
-from utils.excell_reader import Excellreader, TestData
+
 # 添加当前目录到Python路径
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from testcases import test_login
 from testcases import test_createmodel
 from core.logger import logger
-from testcases.test_newcreate import TestNewCreate  # 导入类，不是直接导入方法
+from testcases.test_newcreate import  Test_NewCreate
 
 
-def main(browser):
+def main(driver):
+
     """主测试流程"""
-    driver = browser
+    # driver = browser
     try:
         # 1. 执行登录测试
+        print("=== 开始执行登录测试 ===")
         logger.info("=== 开始执行登录测试 ===")
         test_login.test_login_func(driver)  # 这会返回浏览器驱动
 
         # 2. 执行创建模型测试（使用同一个driver）
+        print("=== 开始执行创建模型测试 ===")
         logger.info("=== 开始执行创建模型测试 ===")
         test_createmodel.test_createmodel_func(driver)
 
         # 3. 从excell点击新建
+        print("=== 开始执行点击创建功能 ===")
         logger.info("=== 开始执行点击创建功能 ===")
-        #test_newcreate.test_new_create_func(driver)
-        test_newcreate_shili = TestNewCreate()  # 实例化TestNewCreate类
+        test_newcreate_shili = Test_NewCreate()  # 实例化TestNewCreate类
         test_newcreate_shili.run_all_tests(driver)  # 调用实例方法
 
         #4. 从excell开始truework
@@ -53,4 +56,13 @@ def main(browser):
 
 
 if __name__ == "__main__":
-    pytest.main(["-s", "test_main.py"])
+
+    # pytest.main(["-s", "test_main.py", "--reruns", "2"])
+
+    # 手动初始化 driver
+    browser_engine = BrowserEngine()
+    driver = browser_engine.initialize_driver()
+    try:
+        main(driver)  # 传入手动创建的 driver
+    finally:
+        driver.quit()  # 测试结束后关闭浏览器
