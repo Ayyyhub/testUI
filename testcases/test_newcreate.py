@@ -34,9 +34,16 @@ class Test_NewCreate:
 
 
 
+    @pytest.mark.dependency(depends=["createmodel"])
     def run_all_tests(self, driver):
 
         self.driver = driver  # 保存driver到实例，后续用self.driver,如果后续有其他方法在同一个类下，无需再传 driver 参数
+
+        config = load_config()
+        excell_path = config['excell_path']
+        excell_reader = Excellreader(excell_path)
+        test_data_list2 = excell_reader.get_test_data(sheet_name="workflow01")
+
 
         """直接调用执行所有测试用例（非pytest环境使用）"""
         test_data_list1 = Excellreader(Test_NewCreate.excell_path).get_test_data(sheet_name="newcreate")

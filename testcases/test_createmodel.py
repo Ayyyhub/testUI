@@ -1,4 +1,6 @@
 import time
+
+import pytest
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -9,6 +11,8 @@ from pages.base_page import set_x_length_by_css_hierarchy
 
 class Test_createmodel:
 
+
+    @pytest.mark.dependency(depends=["login"])
     def test_createmodel_func(self,driver):
         self.driver = driver  # 保存driver到实例，后续用self.driver,如果后续有其他方法在同一个类下，无需再传 driver 参数
         try:

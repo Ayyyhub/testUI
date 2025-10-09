@@ -1,4 +1,6 @@
 import sys
+
+import pytest
 # print("当前使用的Python解释器路径：", sys.executable)
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -8,8 +10,11 @@ from core.logger import logger  # 导入封装好的 logger
 from utils.conf_reader import load_config
 
 
+
+
 class Test_login:
 
+    @pytest.mark.dependency(name="login")
     def test_login_func(self,driver):
         self.driver = driver  # 保存driver到实例，后续用self.driver,如果后续有其他方法在同一个类下，无需再传 driver 参数
 

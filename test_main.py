@@ -1,34 +1,34 @@
 import sys
 import os
 import pytest
-
-from conftest import driver
-from core.browser_engine import BrowserEngine
+from testcases.test_createmodel import Test_createmodel
+from testcases.test_login import Test_login
 from testcases.test_workflow01 import Test_truework01
 
 # 添加当前目录到Python路径
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-from testcases import test_login
-from testcases import test_createmodel
 from core.logger import logger
 from testcases.test_newcreate import  Test_NewCreate
 
 
-def main(driver):
+def test_main(driver):
 
     """主测试流程"""
-    # driver = browser
+
     try:
         # 1. 执行登录测试
         print("=== 开始执行登录测试 ===")
         logger.info("=== 开始执行登录测试 ===")
-        test_login.test_login_func(driver)  # 这会返回浏览器驱动
+        test_login_shili=Test_login()
+        test_login_shili.test_login_func(driver)
 
         # 2. 执行创建模型测试（使用同一个driver）
         print("=== 开始执行创建模型测试 ===")
         logger.info("=== 开始执行创建模型测试 ===")
-        test_createmodel.test_createmodel_func(driver)
+        test_createmodel_shili=Test_createmodel()
+        test_createmodel_shili.test_createmodel_func(driver)
+
 
         # 3. 从excell点击新建
         print("=== 开始执行点击创建功能 ===")
@@ -57,12 +57,12 @@ def main(driver):
 
 if __name__ == "__main__":
 
-    # pytest.main(["-s", "test_main.py", "--reruns", "2"])
+    pytest.main(["-s", "test_main.py", "--reruns", "2"])
 
-    # 手动初始化 driver
-    browser_engine = BrowserEngine()
-    driver = browser_engine.initialize_driver()
-    try:
-        main(driver)  # 传入手动创建的 driver
-    finally:
-        driver.quit()  # 测试结束后关闭浏览器
+    # # 手动初始化 driver
+    # browser_engine = BrowserEngine()
+    # driver = browser_engine.initialize_driver()
+    # try:
+    #     main(driver)  # 传入手动创建的 driver
+    # finally:
+    #     driver.quit()  # 测试结束后关闭浏览器

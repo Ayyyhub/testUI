@@ -6,11 +6,11 @@ from core.browser_engine import BrowserEngine
 
 # 读取配置文件
 def load_config():
-    # 获取当前脚本的目录路径
+    # 获取当前脚本的目录的绝对路径
     current_dir = os.path.dirname(os.path.abspath(__file__))
-    # 获取项目根目录
+    # 获取项目的上级目录
     project_root = os.path.dirname(current_dir)
-    # 配置文件路径
+    # 配置文件完整路径
     config_path = os.path.join(project_root, "conf", "config.yaml")
 
 
