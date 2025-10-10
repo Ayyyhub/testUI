@@ -12,7 +12,8 @@ from pages.base_page import set_x_length_by_css_hierarchy
 class Test_createmodel:
 
 
-    @pytest.mark.dependency(depends=["login"])
+    # @pytest.mark.dependency(depends=["newcreate"],name="createmodel")
+    @pytest.mark.run(order=3)
     def test_createmodel_func(self,driver):
         self.driver = driver  # 保存driver到实例，后续用self.driver,如果后续有其他方法在同一个类下，无需再传 driver 参数
         try:

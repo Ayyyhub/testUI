@@ -3,19 +3,8 @@ import openpyxl
 from dataclasses import dataclass
 from typing import List
 
-#TesestData 类名以 Test 开头，且有（@dataclass 隐式生成的）__init__ 方法，pytest 就会 “误把它当成测试类来收集”，从而触发 PytestCollectionWarning（但它其实是 “数据类”，不是测试类）。
-@dataclass
-class AETestData:
-    test_case_id: str
-    description:str          #流程描述
-    step_id: str          #步骤序号
-    determin_type: str    #定位类型
-    determin_method: str  #定位方式
-    determin_value: str   #定位值
-    input_value: str
-    expected_result: str  #预期结果
-    outputed_result: str  #实际结果
-    status: str
+from pages.TestData import AETestData
+
 
 
 class Excellreader:
@@ -27,7 +16,7 @@ class Excellreader:
     def get_test_data(self, sheet_name: str)-> List[AETestData]:
         """从Excel读取测试数据"""
         # 打印所有可用的工作表名称
-        print("实际读取到的工作表：", self.workbook.sheetnames)
+        # print("实际读取到的工作表：", self.workbook.sheetnames)
         if sheet_name not in self.workbook.sheetnames:
             raise ValueError(f"工作表 '{sheet_name}' 不存在，可用工作表：{self.workbook.sheetnames}")
         sheet = self.workbook[sheet_name]

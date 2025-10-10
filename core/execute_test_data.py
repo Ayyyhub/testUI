@@ -1,7 +1,3 @@
-import logging
-
-from core.logger import logger
-from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -99,6 +95,10 @@ class UITestExecutor:
         - 普通定位：返回 (By, 定位值)
         - 分层定位：返回 (父元素WebElement, 子元素By, 子元素定位值)
         """
+        # 检查参数是否为空
+        if not determin_method or not determin_value:
+            raise ValueError(f"定位方式或定位值不能为空: 方式=[{determin_method}], 值=[{determin_value}]")
+            
         # 处理「先定位父容器」的逻辑（示例：定位方式为"xpath(先定位父容器)"）
         if determin_method == "xpath(先定位父容器)":
             if "||" in determin_value:
@@ -116,38 +116,45 @@ class UITestExecutor:
             # 处理普通定位（id、css等）
             by = self.locator_map.get(determin_method.lower())
             if not by:
-                raise ValueError(f"不支持的定位方式: {determin_method}")
+                raise ValueError(f"不支持的定位方式: [{determin_method}]，支持的定位方式有: {list(self.locator_map.keys())}")
             return (by, determin_value)
 
     def execute_step(self, step):
         """根据测试步骤执行UI操作（兼容分层定位）"""
         try:
             print(f"执行步骤 {step.step_id}: {step.description}")
-            element = None
-
+            print(f"操作类型：[{step.determin_method}], 定位方式: [{step.determin_method}], 定位值: [{step.determin_value}]")  # 添加这行来打印详细信息
+            global element
+    
             # 1. 获取定位器（支持分层/普通两种格式）
-            locator = self.get_locator(step.determin_method, step.determin_value)
-
+            try:
+                locator = self.get_locator(step.determin_method, step.determin_value)
+            except Exception as e:
+                print(f"❌ 获取定位器失败: {str(e)}")
+                step.outputed_result = f"获取定位器失败: {str(e)}"
+                step.status = "FAIL"
+                return
+    
             # 2. 解析定位器，找到目标元素
             if isinstance(locator, tuple):
                 if len(locator) == 3:
                     # 分层定位：父元素内找子元素
                     parent_elem, child_by, child_value = locator
                     element = parent_elem.find_element(child_by, child_value)
-                    print(f"✅ 分层定位成功：父容器内找到子元素，定位方式[{child_by}]，值[{child_value}]")
+                    print(f"分层定位成功：父容器内找到子元素，定位方式[{child_by}]，值[{child_value}]")
                 else:
                     # 普通定位：直接找元素
                     by, value = locator
                     element = self.wait.until(
                         EC.presence_of_element_located((by, value))
                     )
-                    print(f"✅ 普通定位成功：定位方式[{by}]，值[{value}]")
+                    print(f"普通定位成功：定位方式——[{by}]，值——[{value}]")
             else:
                 raise ValueError("定位器格式错误，需为元组")
-
+    
             # 3. 根据操作类型执行动作（click/input/verify等）
-            action = step.determin_type  # 假设Excel中“操作类型”字段存click/input等
-
+            action = step.determin_type  # 假设Excel中"操作类型"字段存click/input等
+    
             if action == "click":
                 clickable_elem = self.wait.until(
                     EC.element_to_be_clickable(element if element else (by, value))
@@ -155,13 +162,13 @@ class UITestExecutor:
                 clickable_elem.click()
                 step.outputed_result = "点击成功"
                 step.status = "PASS"
-
+    
             elif action == "input":
                 element.clear()
                 element.send_keys(step.input_value)
                 step.outputed_result = f"输入内容: {step.input_value}"
                 step.status = "PASS"
-
+    
             elif action == "verify":
                 actual_text = element.text
                 if actual_text == step.expected_result:
@@ -170,11 +177,11 @@ class UITestExecutor:
                 else:
                     step.outputed_result = f"验证失败，预期: {step.expected_result}, 实际: {actual_text}"
                     step.status = "FAIL"
-
+    
             else:
                 step.outputed_result = f"不支持的操作类型: {action}"
                 step.status = "ERROR"
-
+    
         except Exception as e:
             step.outputed_result = f"操作失败: {str(e)}"
             step.status = "FAIL"

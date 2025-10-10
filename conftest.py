@@ -41,9 +41,11 @@ def retry(attempts=3, delay=2):
 @pytest.fixture(scope="session")
 def driver():
     """初始化浏览器驱动并返回driver实例"""
+    print("👉 开始初始化 session 级 driver")  # 前置日志
     browser_engine = BrowserEngine()
     driver = browser_engine.initialize_driver()
     yield driver
+    print("👉 开始销毁 session 级 driver")  # 后置日志（所有测试结束后执行）
     driver.quit()
 
 # # 增强版自动日志记录fixture

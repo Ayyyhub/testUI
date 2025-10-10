@@ -14,9 +14,11 @@ from utils.conf_reader import load_config
 
 class Test_login:
 
-    @pytest.mark.dependency(name="login")
+    # @pytest.mark.dependency(name="login")
+    @pytest.mark.run(order=1)
     def test_login_func(self,driver):
         self.driver = driver  # 保存driver到实例，后续用self.driver,如果后续有其他方法在同一个类下，无需再传 driver 参数
+        logger.info("=== 开始执行登录测试 ===")
 
         # 加载配置
         config = load_config()
@@ -106,29 +108,6 @@ class Test_login:
                 logger.info("登录成功，等待页面加载...")
                 time.sleep(2)  # 给页面一些时间加载
 
-                # # 登录成功后，不关闭浏览器，而是自动调用move_test.py
-                # print("登录成功，准备调用move_test.py...")
-                # logger.info("登录成功，准备调用move_test.py...")
-                # # 不关闭当前浏览器，让move_test.py可以继续使用
-                # print("请不要关闭浏览器，move_test.py将继续使用当前会话")
-                # logger.info("请不要关闭浏览器，move_test.py将继续使用当前会话")
-                # # 使用subprocess调用move_test.py
-                # try:
-                #     # 获取当前脚本的目录路径
-                #     current_dir = os.path.dirname(os.path.abspath(__file__))
-                #     move_test_path = os.path.join(current_dir, "test_createmodel.py")
-                #
-                #     print(f"正在调用: {move_test_path}")
-                #
-                #     # 使用Python解释器运行move_test.py
-                #     subprocess.Popen(["python", move_test_path])
-                #     print("move_test.py已启动，请查看其输出")
-                #
-                #     # 不要在这里退出，让用户决定何时关闭
-                #     print("请在完成所有操作后手动关闭浏览器")
-                # except Exception as e:
-                #     # print("调用move_test.py失败:", str(e))
-                #     logger.info("调用move_test.py失败:", str(e))
             else:
                 print("页面加载异常，URL:", driver.current_url)
 
