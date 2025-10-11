@@ -13,7 +13,7 @@ class Test_truework01:
     #     for data in Excellreader(excell_path).get_test_data(sheet_name="truework")
     # ])
     # @pytest.mark.dependency(depends=["createmodel"],name="workflow01")
-    @pytest.mark.run(order=4)
+    @pytest.mark.run(order=2)
     def test_truework01_func(self,driver):
         logger.info("=== 开始执行work_flow01 ===")
         self.driver = driver  # 保存driver到实例，后续用self.driver,如果后续有其他方法在同一个类下，无需再传 driver 参数

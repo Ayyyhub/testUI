@@ -91,16 +91,41 @@ class UITestExecutor:
 
     def get_locator(self, determin_method, determin_value):
         """
-        解析定位方式+定位值，支持「先父容器后子元素」的分层定位
+        解析定位方式+定位值，支持「先父容器后子元素」的分层定位和连续操作
         - 普通定位：返回 (By, 定位值)
         - 分层定位：返回 (父元素WebElement, 子元素By, 子元素定位值)
+        - 连续操作：返回 [(By1, 值1), (By2, 值2), ...] 的列表
         """
         # 检查参数是否为空
         if not determin_method or not determin_value:
             raise ValueError(f"定位方式或定位值不能为空: 方式=[{determin_method}], 值=[{determin_value}]")
             
-        # 处理「先定位父容器」的逻辑（示例：定位方式为"xpath(先定位父容器)"）
-        if determin_method == "xpath(先定位父容器)":
+        # 处理连续操作的逻辑（如"xpath,xpath"）
+        if "," in determin_method:
+            # 拆分多个定位方式
+            methods = determin_method.split(",")
+            
+            # 检查定位值是否也有对应数量的分隔
+            if "||" not in determin_value or determin_value.count("||") != len(methods) - 1:
+                raise ValueError(f"连续操作时，定位值必须用'||'分隔，且数量与定位方式匹配: 方式=[{determin_method}], 值=[{determin_value}]")
+            
+            # 拆分多个定位值
+            values = determin_value.split("||")
+            
+            # 构建连续操作的定位器列表
+            locators = []
+            for i, method in enumerate(methods):
+                method = method.strip()  # 去除可能的空格
+                by = self.locator_map.get(method.lower())
+                if not by:
+                    raise ValueError(f"不支持的定位方式: [{method}]，支持的定位方式有: {list(self.locator_map.keys())}")
+                locators.append((by, values[i].strip()))
+            
+            # 返回连续操作的定位器列表，添加特殊标记表示这是连续操作
+            return {"type": "sequential", "locators": locators}
+            
+        # 处理「先定位父容器」的逻辑
+        elif determin_method == "xpath(先定位父容器)":
             if "||" in determin_value:
                 # 拆分父容器定位和子元素定位（用||分隔）
                 parent_locator, child_locator = determin_value.split("||", 1)
@@ -120,13 +145,15 @@ class UITestExecutor:
             return (by, determin_value)
 
     def execute_step(self, step):
-        """根据测试步骤执行UI操作（兼容分层定位）"""
+        """根据测试步骤执行UI操作（兼容分层定位和连续操作）"""
         try:
             print(f"执行步骤 {step.step_id}: {step.description}")
-            print(f"操作类型：[{step.determin_method}], 定位方式: [{step.determin_method}], 定位值: [{step.determin_value}]")  # 添加这行来打印详细信息
-            global element
+            print(f"操作类型：[{step.determin_type}], 定位方式: [{step.determin_method}], 定位值: [{step.determin_value}]")
+            element = None
+            by = None
+            value = None
     
-            # 1. 获取定位器（支持分层/普通两种格式）
+            # 1. 获取定位器（支持分层/普通/连续三种格式）
             try:
                 locator = self.get_locator(step.determin_method, step.determin_value)
             except Exception as e:
@@ -136,11 +163,38 @@ class UITestExecutor:
                 return
     
             # 2. 解析定位器，找到目标元素
-            if isinstance(locator, tuple):
+            # 处理连续操作的情况
+            if isinstance(locator, dict) and locator.get("type") == "sequential":
+                # 连续操作的情况
+                #
+                
+                # 执行每一步定位和点击
+                for i, loc in enumerate(locator['locators']):
+                    by, value = loc
+                    print(f"执行第{i+1}步定位: 方式——[{by}], 值——[{value}]")
+                    
+                    # 等待元素可点击并点击
+                    element = self.wait.until(
+                        EC.presence_of_element_located((by, value))
+                    )
+                    
+                    # 除了最后一个元素外，其他都执行点击
+                    if i < len(locator['locators']) - 1:
+                        clickable_elem = self.wait.until(
+                            EC.element_to_be_clickable((by, value))
+                        )
+                        clickable_elem.click()
+                        print(f"第{i+1}步点击成功")
+                    
+                    # 最后一个元素不自动点击，留给后续操作处理
+                    print(f"连续操作定位完成，最后一个元素已找到")
+                    
+            elif isinstance(locator, tuple):
                 if len(locator) == 3:
                     # 分层定位：父元素内找子元素
                     parent_elem, child_by, child_value = locator
                     element = parent_elem.find_element(child_by, child_value)
+                    by, value = child_by, child_value
                     print(f"分层定位成功：父容器内找到子元素，定位方式[{child_by}]，值[{child_value}]")
                 else:
                     # 普通定位：直接找元素
@@ -150,7 +204,7 @@ class UITestExecutor:
                     )
                     print(f"普通定位成功：定位方式——[{by}]，值——[{value}]")
             else:
-                raise ValueError("定位器格式错误，需为元组")
+                raise ValueError("定位器格式错误，需为元组或字典")
     
             # 3. 根据操作类型执行动作（click/input/verify等）
             action = step.determin_type  # 假设Excel中"操作类型"字段存click/input等
@@ -159,9 +213,19 @@ class UITestExecutor:
                 clickable_elem = self.wait.until(
                     EC.element_to_be_clickable(element if element else (by, value))
                 )
-                clickable_elem.click()
-                step.outputed_result = "点击成功"
-                step.status = "PASS"
+                try:
+                    clickable_elem.click()
+                    step.outputed_result = "点击成功"
+                    step.status = "PASS"
+                except Exception as e:
+                    if "element click intercepted" in str(e).lower():
+                        # 尝试使用JavaScript点击
+                        print(f"常规点击被拦截，尝试使用JavaScript点击")
+                        self.driver.execute_script("arguments[0].click();", element)
+                        step.outputed_result = "通过JavaScript点击成功"
+                        step.status = "PASS"
+                    else:
+                        raise e
     
             elif action == "input":
                 element.clear()
