@@ -11,22 +11,26 @@ class BasePase:
     def get_xinjianNum(self):  # 修正方法名（符合PEP8命名规范）
         """获取标签页数量及名称列表"""
         try:
-            # 1. 定位标签页容器（修复多类名定位问题，使用CSS_SELECTOR）
+            # # 1. 定位标签页容器（修复多类名定位问题，使用CSS_SELECTOR）
+            # tab_container = WebDriverWait(self.driver, 10).until(
+            #     EC.presence_of_element_located((
+            #         By.CLASS_NAME,  # 多类名用.连接，精准匹配容器
+            #         "el-tabs__nav-scroll"
+            #     ))
+            # )
+            # 1. 定位标签页容器（精准匹配包含标签项的父容器）
             tab_container = WebDriverWait(self.driver, 10).until(
                 EC.presence_of_element_located((
-                    By.CLASS_NAME,  # 多类名用.连接，精准匹配容器
-                    "el-tabs__nav-scroll"
+                    By.XPATH,
+                    "//div[@class='el-tabs__nav-scroll']/div[@class='el-tabs__nav is-top']"  # 匹配 class 为 el-tabs__nav 和 is-top 的 div
                 ))
             )
-            logger.info(f"tab_container:{tab_container.text}")
 
-            # 2. 在容器内定位所有标签项（使用CSS_SELECTOR确保稳定性）
+            # 2. 在容器内定位所有标签项（匹配多类名的标签项）
             tab_items = tab_container.find_elements(
                 By.CSS_SELECTOR,
-                "div.el-tabs__item.is-top"  # 所有标签项的共同类名组合
+                "div.el-tabs__item.is-top"  # 匹配每个标签项（class 含 el-tabs__item 和 is-top）
             )
-            logger.info(f"tab_items:{len(tab_items)}")
-            print(f"所有标签：{tab_items}")
 
             # 3. 提取每个标签的名称
             tab_names = []
@@ -42,6 +46,8 @@ class BasePase:
                 except Exception as e:
                     print(f"提取单个标签名称失败：{str(e)}")
                     tab_names.append("未知标签")  # 标记异常标签
+
+            logger.info(f"标签长度为: {len(tab_items)}，新建场景为: {tab_names[:]}")
 
             # 4. 返回结构化结果
             return {

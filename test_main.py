@@ -3,6 +3,7 @@ import pytest
 from core.browser_engine import BrowserEngine
 from core.logger import logger
 from testcases.test_login import Test_login
+
 from testcases.test_workflow01 import Test_truework01
 
 
@@ -16,7 +17,8 @@ def test_main(driver):
         test_login_shili=Test_login()
         test_login_shili.test_login_func(driver)
 
-
+        # test_upload_shili=Test_upload()
+    # test_upload_shili.test_upload(driver)
 
         #2. 从excell开始truework
         test_truework_shili= Test_truework01()

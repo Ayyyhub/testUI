@@ -44,6 +44,7 @@ def driver():
     print("👉 开始初始化 session 级 driver")  # 前置日志
     browser_engine = BrowserEngine()
     driver = browser_engine.initialize_driver()
+
     yield driver
     print("👉 开始销毁 session 级 driver")  # 后置日志（所有测试结束后执行）
     driver.quit()
