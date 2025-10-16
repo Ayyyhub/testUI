@@ -35,10 +35,12 @@ class Test_truework01:
         excell_path = config['excell_path']
         excell_reader = Excellreader(excell_path)
         test_data_list2=excell_reader.get_test_data(sheet_name="workflow01")
+
         for data in test_data_list2:
             if data:
                 print(f"\n执行测试用例：{data}")
-                execute = UITestExecutor(driver,actions)
+                # 执行excell元素流程测试
+                execute = UITestExecutor(driver)
                 execute.execute_step(data)
                 print("测试结果汇总:")
                 print(f"步骤 {data.step_id}: {data.status} - {data.outputed_result}\n")

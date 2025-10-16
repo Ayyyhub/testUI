@@ -24,23 +24,22 @@ class Excellreader:
 
         # 跳过标题行，从第二行开始读取
         for row in range(2, sheet.max_row + 1):
-            # 检查是否要运行该用例
-            # run_flag = sheet.cell(row=row, column=7).value
-            # if run_flag and run_flag.upper() == 'Y':
-            test_data = AETestData(
-                test_case_id=sheet.cell(row=row, column=1).value,
-                description=sheet.cell(row=row, column=2).value,
-                step_id=sheet.cell(row=row, column=3).value,
-                determin_type=sheet.cell(row=row, column=4).value,
-                determin_method=sheet.cell(row=row, column=5).value,
-                determin_value=sheet.cell(row=row, column=6).value,
-                input_value=sheet.cell(row=row, column=7).value,
-                expected_result=sheet.cell(row=row, column=8).value,
-                outputed_result=sheet.cell(row=row, column=9).value,
-                status=sheet.cell(row=row, column=10).value,
-            )
-            # test_data = [test_data]
-            test_data_list.append(test_data)
+            # 获取测试用例ID并检查是否被注释
+            test_case_id = sheet.cell(row=row, column=1).value
+            if test_case_id and not str(test_case_id).strip().startswith('//'):
+                test_data = AETestData(
+                    test_case_id=test_case_id,
+                    description=sheet.cell(row=row, column=2).value,
+                    step_id=sheet.cell(row=row, column=3).value,
+                    determin_type=sheet.cell(row=row, column=4).value,
+                    determin_method=sheet.cell(row=row, column=5).value,
+                    determin_value=sheet.cell(row=row, column=6).value,
+                    input_value=sheet.cell(row=row, column=7).value,
+                    expected_result=sheet.cell(row=row, column=8).value,
+                    outputed_result=sheet.cell(row=row, column=9).value,
+                    status=sheet.cell(row=row, column=10).value,
+                )
+                test_data_list.append(test_data)
 
         return test_data_list
 

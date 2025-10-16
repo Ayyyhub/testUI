@@ -7,7 +7,7 @@ from pages.base_page import BasePase
 from core.logger import logger
 import time
 import os
-
+from utils.wait_clickable import wait_overlays_gone
 from testcases.test_login import Test_login
 
 
@@ -24,9 +24,11 @@ class aTest_upload:
         try:
             logger.info("点击新建场景")
 
-            # driver.find_element(By.XPATH,'//div[@class="icon_and_text' and span="新建"]')
+            wait_overlays_gone(self.driver, timeout=10)
+
             new_clik = driver.find_element(By.XPATH, '//div[@class="icon_and_text" and span[text()="新建"]]')
             new_clik.click()
+            time.sleep(3)
             # 断言
             basepage = BasePase(driver=self.driver)
             tab_info = basepage.get_xinjianNum()
@@ -149,82 +151,6 @@ class aTest_upload:
                             except Exception as e:
                                 logger.error(f"等待上传过程中发生错误: {str(e)}")
 
-                            # 写关闭浏览器内部文件选择对话框逻辑
-                            # 关闭浏览器内部文件选择对话框逻辑
-                            # try:
-                            #     logger.info("开始尝试关闭文件选择对话框")
-                            #
-                            #     # 方式1：定位对话框的"取消"按钮（通常是×图标或"关闭"文本）
-                            #     close_buttons = [
-                            #         # 匹配"取消"文本的按钮（很多对话框用取消代替关闭）
-                            #         "//button[contains(text(), '取消')]",
-                            #         # 匹配常见的关闭图标（×）
-                            #         "//i[contains(@class, 'close') or contains(@class, 'el-icon-close')]",
-                            #         "//button[contains(@class, 'el-icon-close')]",
-                            #         # 匹配对话框头部的关闭按钮
-                            #         "//div[contains(@class, 'dialog-header')]//button[contains(@class, 'close')]",
-                            #         "//div[contains(@class, 'el-dialog__header')]//button[contains(@class, 'el-dialog__headerbtn')]",
-                            #         # 匹配模态框的关闭按钮
-                            #         "//div[contains(@class, 'modal')]//button[contains(@class, 'close')]"
-                            #
-                            #     ]
-                            #
-                            #     closed = False
-                            #     for selector in close_buttons:
-                            #         try:
-                            #             # 等待按钮可点击，最多等3秒
-                            #             close_btn = WebDriverWait(driver, 3).until(
-                            #                 EC.element_to_be_clickable((By.XPATH, selector))
-                            #             )
-                            #             close_btn.click()
-                            #             logger.info(f"通过选择器 {selector} 关闭了文件对话框")
-                            #             closed = True
-                            #             break
-                            #         except Exception:
-                            #             continue  # 一种方式失败，尝试下一种
-                            #
-                            #     if not closed:
-                            #         # 方式2：按ESC键关闭对话框
-                            #         try:
-                            #             from selenium.webdriver.common.keys import Keys
-                            #             driver.find_element(By.TAG_NAME, "body").send_keys(Keys.ESCAPE)
-                            #             logger.info("通过ESC键关闭了文件对话框")
-                            #             closed = True
-                            #             time.sleep(1)
-                            #         except Exception:
-                            #             pass
-                            #
-                            #     if not closed:
-                            #         # 方式3：用JavaScript强制隐藏对话框（终极方案）
-                            #         try:
-                            #             # 常见的对话框class命名（根据实际页面调整）
-                            #             dialog_selectors = [
-                            #                 "//div[contains(@class, 'file-dialog')]",
-                            #                 "//div[contains(@class, 'upload-dialog')]",
-                            #                 "//div[contains(@class, 'el-dialog') and contains(@style, 'display: block')]"
-                            #             ]
-                            #             for dialog_selector in dialog_selectors:
-                            #                 dialogs = driver.find_elements(By.XPATH, dialog_selector)
-                            #                 if dialogs:
-                            #                     # 用JS设置对话框为隐藏
-                            #                     driver.execute_script("arguments[0].style.display = 'none';",
-                            #                                           dialogs[0])
-                            #                     logger.info(f"通过JS强制隐藏了对话框：{dialog_selector}")
-                            #                     closed = True
-                            #                     break
-                            #         except Exception as e:
-                            #             logger.warning(f"所有关闭方式均失败：{str(e)}")
-                            #
-                            #     if closed:
-                            #         # 等待对话框消失
-                            #         time.sleep(1)
-                            #     else:
-                            #         logger.warning("未找到文件对话框，可能上传中...")
-                            #
-                            # except Exception as e:
-                            #     logger.error(f"关闭文件对话框时发生错误：{str(e)}")
-                            #
-                            # logger.info("文件上传操作完成")
                         else:
                             logger.error("无法找到文件输入框")
                             

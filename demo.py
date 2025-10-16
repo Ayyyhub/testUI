@@ -1,5 +1,6 @@
-from telnetlib import EC
+import traceback
 
+import pytest
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -7,6 +8,7 @@ from conftest import driver
 from core.browser_engine import BrowserEngine
 from core.execute_test_data import UITestExecutor
 from core.logger import logger
+from testcases.test_upload import aTest_upload
 from utils.conf_reader import load_config
 from utils.excell_reader import Excellreader
 import time
@@ -97,23 +99,71 @@ def truework01_func1():
         denglu_button.click()
 
         time.sleep(3)
+        # upload_test = aTest_upload()
+        # upload_result = upload_test.atest_upload(driver1)
 
-        # 在for循环中添加更详细的错误处理
-        test_data_list2 = excell_reader.get_test_data(sheet_name="workflow01")
+        # # 2. 确保上传成功后再执行工作流程
+        # if upload_result:
+        #     logger.info("上传成功，开始执行工作流程")
+        #     # 删除递归调用，直接执行工作流程逻辑
+        # else:
+        #     pytest.fail("上传失败，跳过工作流程测试")
+
+        test_data_list2 = excell_reader.get_test_data(sheet_name="Sheet1")
         for data in test_data_list2:
             if data:
                 try:
                     print(f"\n开始执行测试用例：{data.step_id}")
+                    print(f"步骤描述: {data.description}")  # 添加步骤描述输出
+
+                    # 在执行前先检查元素是否存在
+                    if data.determin_type == "click":
+                        try:
+                            element = WebDriverWait(driver1, 10).until(
+                                EC.presence_of_element_located((By.XPATH, data.determin_value))
+                            )
+                            print(f"元素状态: 可见={element.is_displayed()}, "
+                                  f"启用={element.is_enabled()}")
+                        except Exception as e:
+                            print(f"元素检查失败: {str(e)}")
+
                     execute = UITestExecutor(driver1)
-                    time.sleep(2)
                     execute.execute_step(data)
 
                     print("测试结果汇总:")
                     print(f"步骤 {data.step_id}: {data.status} - {data.outputed_result}\n")
+
                 except Exception as e:
-                    print(f"执行步骤 {data.step_id} 时发生错误: {str(e)}")
+                    print(f"执行步骤 {data.step_id} 时发生错误:")
+                    print(f"错误类型: {type(e).__name__}")
+                    print(f"错误信息: {str(e)}")
+                    print("详细堆栈:")
+                    print(traceback.format_exc())
+
+                    # 保存页面截图
+                    try:
+                        screenshot_path = f"error_screenshot_step_{data.step_id}.png"
+                        driver1.save_screenshot(screenshot_path)
+                        print(f"错误截图已保存: {screenshot_path}")
+                    except Exception as se:
+                        print(f"保存截图失败: {str(se)}")
+
+                    # 打印当前页面源码
+                    try:
+                        print("\n当前页面源码片段:")
+                        page_source = driver1.page_source
+                        print(page_source[:500] + "...")  # 只打印前500个字符
+                    except Exception as pe:
+                        print(f"获取页面源码失败: {str(pe)}")
+
+                    # 可以选择是继续执行还是中断
+                    if data.status == "FAIL":
+                        print(f"步骤 {data.step_id} 失败，但继续执行后续步骤")
+
+
     except Exception as e:
-        print("发生错误:", str(e))
+        print("发生全局错误:")
+        print(traceback.format_exc())
 
 if __name__ == '__main__':
     truework01_func1()

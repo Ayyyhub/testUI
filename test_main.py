@@ -18,7 +18,7 @@ def test_main(driver):
         test_login_shili.test_login_func(driver)
 
         # test_upload_shili=Test_upload()
-    # test_upload_shili.test_upload(driver)
+        # test_upload_shili.test_upload(driver)
 
         #2. 从excell开始truework
         test_truework_shili= Test_truework01()
@@ -31,10 +31,6 @@ def test_main(driver):
 
     except Exception as e:
         logger.error(f"测试执行过程中发生错误: {e}")
-    # finally:
-    #     if driver:
-    #         driver.quit()
-    #         logger.info("浏览器已关闭")
 
 
 
