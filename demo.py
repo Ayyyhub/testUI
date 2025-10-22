@@ -7,7 +7,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from conftest import driver
 from core.browser_engine import BrowserEngine
 from core.execute_test_data import UITestExecutor
-from core.logger import logger
+from Log.logger import logger
 from testcases.test_upload import aTest_upload
 from utils.conf_reader import load_config
 from utils.excell_reader import Excellreader
@@ -101,7 +101,7 @@ def truework01_func1():
         time.sleep(3)
         # upload_test = aTest_upload()
         # upload_result = upload_test.atest_upload(driver1)
-
+        #
         # # 2. 确保上传成功后再执行工作流程
         # if upload_result:
         #     logger.info("上传成功，开始执行工作流程")

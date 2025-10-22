@@ -12,7 +12,7 @@ class AETestData:
     determin_type: str    #定位类型
     determin_method: str  #定位方式
     determin_value: str   #定位值
-    input_value: str
+    input_value: str      #输入的值
     expected_result: str  #预期结果
     outputed_result: str  #实际结果
     status: str

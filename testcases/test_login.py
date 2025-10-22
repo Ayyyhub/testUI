@@ -6,10 +6,9 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import time
-from core.logger import logger  # 导入封装好的 logger
+from Log.logger import logger  # 导入封装好的 logger
 from utils.conf_reader import load_config
-
-
+from utils.wait_clickable import wait_overlays_gone
 
 
 class Test_login:
@@ -103,11 +102,10 @@ class Test_login:
             # 等待登录完成
             time.sleep(3)
             if driver.current_url == "http://10.20.220.251/homePage":
-                # 等待页面加载完成
-                # print("登录成功，等待页面加载...")
-                logger.info("登录成功，等待页面加载...")
+                # 等待页面加载完
+                logger.info("登录成功")
                 time.sleep(2)  # 给页面一些时间加载
-
+                wait_overlays_gone(self.driver, timeout=10)
             else:
                 print("页面加载异常，URL:", driver.current_url)
 

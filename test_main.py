@@ -1,7 +1,7 @@
 import pytest
 
 from core.browser_engine import BrowserEngine
-from core.logger import logger
+from Log.logger import logger
 from testcases.test_login import Test_login
 
 from testcases.test_workflow01 import Test_truework01

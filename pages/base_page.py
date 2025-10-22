@@ -3,7 +3,7 @@ from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 
-from core.logger import logger
+from Log.logger import logger
 class BasePase:
     def __init__(self, driver):
         self.driver = driver

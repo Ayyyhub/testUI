@@ -6,6 +6,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from utils.excell_reader import Excellreader, AETestData  # 导入你的ExcelReader和TestData
 from pages.base_page import BasePase
+from utils.perfomance.performance_decorator import monitored_performancer
 from utils.wait_clickable import wait_overlays_gone
 
 
@@ -83,6 +84,8 @@ class UITestExecutor:
             # # # 为什么单个元素返回的是元组？？？？？？？？？？？？
             return (by, determin_value)
 
+
+    # @monitored_performancer("execute_step")
     def execute_step(self, step):
         """根据测试步骤执行UI操作（兼容分层定位和连续操作）"""
         try:

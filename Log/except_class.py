@@ -8,6 +8,9 @@
 #     ↓ 捕获Selenium原生异常
 # Selenium驱动层
 
+from Log.logger import logger
+import datetime
+
 class UIAutomationException(Exception):
     """UI自动化基础异常"""
     def __init__(self, message, context=None):
@@ -66,7 +69,7 @@ def capture_exception_context(driver, operation_name, additional_context=None):
 
 
 
-#
+
 
 
 #推荐的做法（精确分类）

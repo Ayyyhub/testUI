@@ -4,7 +4,7 @@ import pytest
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
 from pages.base_page import BasePase
-from core.logger import logger
+from Log.logger import logger
 import time
 import os
 from utils.wait_clickable import wait_overlays_gone

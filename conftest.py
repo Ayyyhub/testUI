@@ -1,6 +1,6 @@
 #测试夹具
 from core.browser_engine import BrowserEngine
-from core.logger import logger
+from Log import logger
 from utils.excell_reader import Excellreader
 import pytest
 import time
