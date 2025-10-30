@@ -94,7 +94,7 @@ def set_x_length_by_css_hierarchy(driver):
 
         # 3. 修改输入框的值为 2500
         target_input.clear()  # 清空原有值（若需保留可跳过）
-        target_input.send_keys("2500")  # 输入新值
+        target_input.send_keys("500")  # 输入新值
 
         # （可选）用 JavaScript 强制设置值（确保值被立即修改）
         # driver.execute_script("arguments[0].value = '2500';", target_input)

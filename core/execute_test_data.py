@@ -30,7 +30,7 @@ class UITestExecutor:
     def get_locator(self, determin_method, determin_value):
         """
         解析定位方式+定位值，支持「先父容器后子元素」的分层定位和连续操作
-        - 普通定位：返回 (By, 定位值)
+        - 单次定位：返回 (By, 定位值)
         - 分层定位：返回 (父元素WebElement, 子元素By, 子元素定位值)
         - 连续操作：返回 [(By1, 值1), (By2, 值2), ...] 的列表
         """
@@ -38,7 +38,7 @@ class UITestExecutor:
         if not determin_method or not determin_value:
             raise ValueError(f"定位方式或定位值不能为空: 方式=[{determin_method}], 值=[{determin_value}]")
             
-        # 处理连续操作的逻辑（如"xpath,xpath"）
+        # 1、处理连续操作的逻辑（如"xpath,xpath"）
         if "," in determin_method:
             # 拆分多个定位方式
             methods = determin_method.split(",")
@@ -62,7 +62,7 @@ class UITestExecutor:
             # 返回连续操作的定位器列表，添加特殊标记表示这是连续操作
             return {"type": "sequential", "locators": locators}
             
-        # 处理「先定位父容器」的逻辑
+        # 2、处理「先定位父容器」的逻辑
         elif determin_method == "xpath(先定位父容器)":
             if "||" in determin_value:
                 # 拆分父容器定位和子元素定位（用||分隔）
@@ -75,13 +75,14 @@ class UITestExecutor:
             else:
                 # 无分隔符时，直接用XPath定位子元素
                 return (By.XPATH, determin_value)
+
+        # 3、处理单个元素定位
         else:
-            ######单个元素的时候我感觉这里有点多余了？？？？？？？？？
             # 处理普通定位（id、css等）
             by = self.locator_map.get(determin_method.lower())
             if not by:
                 raise ValueError(f"不支持的定位方式: [{determin_method}]，支持的定位方式有: {list(self.locator_map.keys())}")
-            # # # 为什么单个元素返回的是元组？？？？？？？？？？？？
+
             return (by, determin_value)
 
 
@@ -108,19 +109,14 @@ class UITestExecutor:
                 return
 
             # 2. 解析定位器，找到目标元素
-            # 2.1 处理连续操作的情况，locator_dict 是一个字典，包含 type 和 locators列表
+            # 2.1 处理连续操作的情况,isinstance 是 Python 的内置函数,用于判断一个对象是否属于某个指定的类型,locator_dict 是一个字典，包含 type 和 locators列表
             if isinstance(locator_dict, dict) and locator_dict.get("type") == "sequential":
                 # 连续操作的情况
                 if step.determin_type == "click":
-                # 执行每一步定位和点击
+                    # 执行每一步定位和点击
                     for i, loc in enumerate(locator_dict['locators']):
                         by, value = loc
                         print(f"执行第{i+1}步定位: 方式：[{by}], 值：[{value}]")
-
-                        # 等待元素可点击并点击
-                        # element = self.wait.until(
-                        #     EC.presence_of_element_located((by, value))
-                        # )
 
                         # 当有多个元素时，除了最后一个元素外，其他都执行点击
                         if i < len(locator_dict['locators']) - 1:
@@ -178,7 +174,7 @@ class UITestExecutor:
                         
                         # 执行拖拽
                         action_drag = ActionChains(self.driver)
-                        action_drag.drag_and_drop(drag_elem, drop_elem).perform()
+                        action_drag.drag_and_drop(drop_elem, drag_elem).perform()
                         time.sleep(2)  # 等待拖拽动画完成
                         
                         step.outputed_result = "拖拽操作成功"
@@ -193,20 +189,22 @@ class UITestExecutor:
             
             # 2.2 单个操作，locator_dict 是元组，包含定位方式和值
             elif isinstance(locator_dict, tuple):
+                # 有3个定位值时，待完善!
                 if len(locator_dict) == 3:
                     # 分层定位：父元素内找子元素
                     parent_elem, child_by, child_value = locator_dict
                     element = parent_elem.find_element(child_by, child_value)
                     by, value = child_by, child_value
                     print(f"分层定位成功：父容器内找到子元素，定位方式：[{child_by}]，值：[{child_value}]")
+
                 else:
-                    # ============普通定位，直接找元素============
+                    # ============普通定位，直接找元素，只有1个定位值！============
                     by, value = locator_dict
                     element = self.wait.until(
                         # presence_of_element_located是Expected Condition之一,表示检查页面上是否存在指定的元素,
                         # 只要元素出现在DOM中就会返回，即使它不可见
-                        # EC.presence_of_element_located((by, value))
-                        EC.element_to_be_clickable((by, value))
+                        EC.presence_of_element_located((by, value))
+                        #EC.element_to_be_clickable((by, value))
                     )
                     if step.determin_method=="input":
                         print(f"普通定位成功，定位方式：[{by}]，定位值：[{value}],输入数据：[{step.input_value}]")
@@ -215,10 +213,9 @@ class UITestExecutor:
             else:
                 raise ValueError("定位器格式错误，需为元组或字典")
 
-
+            # ============ 执行点击 ============
             # 3. 根据操作类型执行动作（click/input/verify等）
             action = step.determin_type  # 假设Excel中"操作类型"字段存click/input等
-
             if action == "click":
                 # element 已经是定位到的元素了，不需要再用 element if element else (by, value) 判断。
                 clickable_elem = self.wait.until(
@@ -253,11 +250,13 @@ class UITestExecutor:
                         raise e
 
             elif action == "input":
-                # element.clear()
-                # element.send_keys(step.input_value)
-                new_value = step.input_value  # 要设置的新值
-                self.driver.execute_script(f"arguments[0].value = '{new_value}';", element)
-                time.sleep(2)
+                element.clear()
+                element.send_keys(step.input_value)
+
+                # new_value = step.input_value  # 要设置的新值
+                # self.driver.execute_script(f"arguments[0].value = '{new_value}';", element)
+
+                time.sleep(1)
                 step.outputed_result = f"输入内容: {step.input_value}"
                 step.status = "PASS"
 
@@ -281,9 +280,25 @@ class UITestExecutor:
                     else:
                         raise e
 
-            # elif action == "drag_and_drop":
-            #     action_drag = ActionChains(self.driver)
-            #     action_drag.drag_and_drop(step.determin_value[0], step.determin_value[1]).perform()
+            elif action == "double_click":
+                action_double = ActionChains(self.driver)
+                action_double_elem = self.wait.until(
+                    EC.element_to_be_clickable(element if element else (by, value))
+                )
+                try:
+                    action_double.double_click(action_double_elem).perform()
+                    time.sleep(2)
+                    step.outputed_result = "点击成功"
+                    step.status = "PASS"
+                except Exception as e:
+                    if "element click intercepted" in str(e).lower():
+                        # 尝试使用JavaScript点击
+                        print(f"常规点击被拦截，尝试使用JavaScript点击")
+                        self.driver.execute_script("arguments[0].click();", element)
+                        step.outputed_result = "通过JavaScript点击成功"
+                        step.status = "PASS"
+                    else:
+                        raise e
 
             ### 验证
             elif action == "verify":
@@ -304,23 +319,5 @@ class UITestExecutor:
             step.status = "FAIL"
             print(f"❌ 步骤 {step.step_id} 执行失败: {str(e)}")
 
-    # def wait_overlays_gone(self, timeout=10):
-    #     """等待常见遮罩/弹窗消失，避免点击被拦截"""
-    #     overlay_selectors = [
-    #         ".animation_page",
-    #         ".el-message",                  # Element UI 消息框
-    #         ".el-loading-mask",             # 加载遮罩
-    #         ".el-dialog__wrapper",          # 弹窗容器
-    #         ".modal-mask",
-    #         "[class*='overlay']",
-    #         "[class*='mask']"
-    #     ]
-    #     for css in overlay_selectors:
-    #         try:
-    #             WebDriverWait(self.driver, timeout).until(
-    #                 EC.invisibility_of_element_located((By.CSS_SELECTOR, css))
-    #             )
-    #         except Exception:
-    #             # 不可见等待失败也不抛出，交由后续清理逻辑处理
-    #             pass
+
 

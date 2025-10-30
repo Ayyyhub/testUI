@@ -2,7 +2,6 @@ import openpyxl
 import json
 from datetime import datetime
 from typing import List, Dict
-# import requests
 import requests
 from utils.conf_reader import load_config
 from utils.excell_reader import Excellreader
@@ -10,62 +9,116 @@ from utils.excell_reader import Excellreader
 
 class AEUIBot:
     def __init__(self):
+        # 测试
         self.api_url = "https://oapi.dingtalk.com/robot/send?access_token=a68d48b561a32ee60470b51e979f2dbf7b8bf4681c4fa740de9eaadb44721381"
 
-        # self.api_url = "https://oapi.dingtalk.com/robot/send?access_token=b8f258163e1bac56cafe168c68e43fe49436126c603d90e02f3ad8247e661ecd"
+        # 生产
+        #self.api_url = "https://oapi.dingtalk.com/robot/send?access_token=b8f258163e1bac56cafe168c68e43fe49436126c603d90e02f3ad8247e661ecd"
         self.headers = {'Content-Type': 'application/json'}
 
     def format_test_results(self, format_result: List[Dict], format_sheetname: str = None) -> str:
         """格式化测试结果"""
         # 统计测试结果
-        config = load_config()
-        # 通过配置文件config.yaml读取到excell路径
-        excell_path = config['excell_path']
-        # excell_reader = Excellreader(excell_path)
-        
-        # 获取工作表名称列表
-        workbook = openpyxl.load_workbook(excell_path)
-        sheet_names = workbook.sheetnames
-        # if format_sheetname and format_sheetname in sheet_names:
-        #     current_sheet = workbook[format_sheetname]
-        #     total_rows = current_sheet.max_row - 1  # 减去标题行
-
         total_cases = len(format_result)
         passed_cases = sum(1 for case in format_result if case.get('status') == 'PASS')
         failed_cases = total_cases - passed_cases
         success_rate = (passed_cases / total_cases * 100) if total_cases > 0 else 0
 
-        # 获取失败的测试用例详情
-        failed_details = [
-            f"- 用例ID: {case.get('test_case_id')}\n  描述: {case.get('description')}\n  失败原因: {'请查看Log日志...'}"
-            for case in format_result if case.get('status') != 'PASS'
-        ]
+        # 按sheet名称分组统计
+        sheet_stats = {}
+        for case in format_result:
+            sheet_name = case.get('sheet_name', '未知工作表')
+            if sheet_name not in sheet_stats:
+                sheet_stats[sheet_name] = {'total': 0, 'passed': 0, 'failed': 0}
+            
+            sheet_stats[sheet_name]['total'] += 1
+            if case.get('status') == 'PASS':
+                sheet_stats[sheet_name]['passed'] += 1
+            else:
+                sheet_stats[sheet_name]['failed'] += 1
+
+        # 获取失败的测试用例详情（按sheet名称分组）
+        failed_details_by_sheet = {}
+        for case in format_result:
+            if case.get('status') != 'PASS':
+                sheet_name = case.get('sheet_name', '未知工作表')
+                if sheet_name not in failed_details_by_sheet:
+                    failed_details_by_sheet[sheet_name] = []
+                
+                failed_details_by_sheet[sheet_name].append(
+                    f"- 用例ID: {case.get('test_case_id')}\n  描述: {case.get('description')}\n  失败原因: {'请查看Log日志...'}"
+                )
 
         # 构建消息内容
         message = (
-            f"执行时间：{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
-            f"执行用例名称{format_sheetname}\n"
-            f"- 用例总数：{total_cases}\n"
-            f"- 通过用例：{passed_cases}\n"
-            f"- 失败用例：{failed_cases}\n"
-            f"- 成功率：{success_rate:.2f}%\n"
+            f"### AE_UI自动化测试\n"
+            f"- 执行时间：{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
+            f"- 总用例数：{total_cases}\n"
+            f"- 总通过用例：{passed_cases}\n"
+            f"- 总失败用例：{failed_cases}\n"
+            f"- 总成功率：{success_rate:.2f}%\n"
         )
-        # 如果有失败的用例，添加失败详情
+        
+        # 添加各sheet的统计信息
+        if sheet_stats:
+            message += "\n### 各工作表统计\n"
+            for sheet_name, stats in sheet_stats.items():
+                sheet_success_rate = (stats['passed'] / stats['total'] * 100) if stats['total'] > 0 else 0
+                message += (
+                    f"- {sheet_name}: {stats['total']}个用例, "
+                    f"通过: {stats['passed']}, "
+                    f"失败: {stats['failed']}, "
+                    f"成功率: {sheet_success_rate:.2f}%\n"
+                )
+
+        # 如果有失败的用例，添加失败详情（按sheet名称分组）
         if failed_cases > 0:
-            message += "\n### 失败用例详情\n" + "\n\n".join(failed_details)
+            message += "\n### 失败用例详情\n"
+            for sheet_name, failed_cases_list in failed_details_by_sheet.items():
+                message += f"\n**{sheet_name}失败用例:**\n"
+                message += "\n".join(failed_cases_list)
+
+        # 加入Allure报告链接
+        allure_report_path = "./allure-report/index.html"
+        import os
+        if os.path.exists(allure_report_path):
+            # 如果是本地文件路径，转换为文件URL格式
+            absolute_path = os.path.abspath(allure_report_path)
+            allure_url = f"file://{absolute_path}"
+            message += f"\n### 📊 详细测试报告\n"
+            message += f"- [点击查看Allure详细报告]({allure_url})\n"
+            message += f"- 报告位置: {absolute_path}\n"
+        else:
+            message += "\n### 📊 测试报告\n"
+            message += "- Allure报告未生成，请检查allure-results目录\n"
 
         return message
 
     def send_test_results(self,  result: List[Dict], sheet_name: str = None) -> bool:
         """发送测试结果到钉钉"""
         try:
-            message = self.format_test_results(result,sheet_name)
+            print(f"=== 调试信息：开始发送测试结果 ===")
+            print(f"测试结果数量：{len(result)}")
+            print(f"测试结果内容：{result}")
+            
+            if not result:
+                print("警告：测试结果为空，跳过发送")
+                return False
+                
+            message = self.format_test_results(result)
+            print(f"格式化后的消息：{message}")
+            key_word = "UI自动化测试报告"
             data = {
                 "msgtype": "markdown",
                 "markdown": {
-                    "title": "AE_Cloud UI自动化测试报告",
+                    "title": key_word,
                     "text": message
+                },
+                "at": {
+                    "atMobiles": [],
+                    "isAtAll": False
                 }
+
             }
             
             response = requests.post(

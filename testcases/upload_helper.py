@@ -8,18 +8,14 @@ from Log.logger import logger
 import time
 import os
 from utils.wait_clickable import wait_overlays_gone
-from testcases.test_login import Test_login
+from testcases.login_helper import Login_Helper
 
 
-class aTest_upload:
-    # @pytest.mark.dependency(name="upload")
-    # @pytest.mark.run(order=2)
-    def atest_upload(self, driver):
+class UploadHelper:
+
+    def upload_model(self, driver):
         self.driver = driver
         upload_success = False  # 添加上传成功标志
-
-        # test_login_shili = Test_login()
-        # test_login_shili.test_login_func(driver)
 
         try:
             logger.info("点击新建场景")

@@ -11,11 +11,11 @@ from utils.conf_reader import load_config
 from utils.wait_clickable import wait_overlays_gone
 
 
-class Test_login:
+class Login_Helper:
 
     # @pytest.mark.dependency(name="login")
-    @pytest.mark.run(order=1)
-    def test_login_func(self,driver):
+    # @pytest.mark.run(order=1)
+    def login_func(self, driver):
         self.driver = driver  # 保存driver到实例，后续用self.driver,如果后续有其他方法在同一个类下，无需再传 driver 参数
         logger.info("=== 开始执行登录测试 ===")
 

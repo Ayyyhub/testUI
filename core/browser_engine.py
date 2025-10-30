@@ -49,5 +49,6 @@ class BrowserEngine:
 
         service = Service(executable_path=chrome_driver_path)  # 通过 Service 管理驱动路径
         driver = webdriver.Chrome(service=service, options=options)
+        driver.maximize_window()
 
         return driver
