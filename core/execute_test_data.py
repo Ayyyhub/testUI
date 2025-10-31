@@ -154,13 +154,16 @@ class UITestExecutor:
 
                 elif step.determin_type == "drag_and_drop":
                     try:
-                        # 等待源元素和目标元素都出现
+                        print(
+                            f"执行第1步定位：方式：“{locator_dict['locators'][0][0]}”，值:“{locator_dict['locators'][0][1]}”")
                         drag_elem = self.wait.until(
                             EC.presence_of_element_located((
                                 locator_dict["locators"][0][0],
                                 locator_dict["locators"][0][1]
                             ))
                         )
+                        print(
+                            f"执行第2步定位：方式：“{locator_dict['locators'][1][0]}”，值:“{locator_dict['locators'][1][1]}”")
                         drop_elem = self.wait.until(
                             EC.presence_of_element_located((
                                 locator_dict["locators"][1][0],
@@ -175,11 +178,10 @@ class UITestExecutor:
                         # 执行拖拽
                         action_drag = ActionChains(self.driver)
                         action_drag.drag_and_drop(drop_elem, drag_elem).perform()
-                        time.sleep(2)  # 等待拖拽动画完成
-                        
+                        time.sleep(1)  # 等待拖拽动画完成
                         step.outputed_result = "拖拽操作成功"
                         step.status = "PASS"
-                        
+                        print(step.status)
                     except Exception as e:
                         print(f"拖拽操作失败: {str(e)}")
                         step.outputed_result = f"拖拽操作失败: {str(e)}"
@@ -227,6 +229,7 @@ class UITestExecutor:
                     time.sleep(2)
                     step.outputed_result = "点击成功"
                     step.status = "PASS"
+                    print(step.status)
                 except Exception as e:
                     if "element click intercepted" in str(e).lower():
                         print("常规点击被拦截，清理遮罩后重试...")

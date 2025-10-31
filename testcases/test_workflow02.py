@@ -27,7 +27,6 @@ class Test_truework02:
         print("=== 调试信息：开始执行test_truework02_func ===")
         
         # 1. 执行登录测试
-        print("=== 调试信息：开始执行登录测试 ===")
         test_login_example = Login_Helper()
         test_login_example.login_func(driver)
         # 点击新建

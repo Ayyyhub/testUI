@@ -31,7 +31,6 @@ class Test_truework01:
         print("=== 调试信息：开始执行test_truework01_func ===")
         
         # 1. 执行登录测试
-        print("=== 调试信息：开始执行登录测试 ===")
         test_login_example = Login_Helper()
         test_login_example.login_func(driver)
         # 1. 执行上传
@@ -73,7 +72,7 @@ class Test_truework01:
                         print(f"步骤 {data.step_id}: {data.status} - {data.outputed_result}")
                         print("=" * 50 + "\n")
                     else:
-                        # 断言失败 - 跳过后续操作，执行下一个测试用例
+                        # 断言失败
                         print(f"断言失败，跳过后续操作，执行下一个测试用例")
                         data.status = "FAIL"
                         data.outputed_result = f"断言失败：预期元素 {data.expected_result} 不可见"

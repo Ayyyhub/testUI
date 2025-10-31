@@ -10,13 +10,13 @@ from utils.excell_reader import Excellreader
 class AEUIBot:
     def __init__(self):
         # 测试
-        self.api_url = "https://oapi.dingtalk.com/robot/send?access_token=a68d48b561a32ee60470b51e979f2dbf7b8bf4681c4fa740de9eaadb44721381"
+        #self.api_url = "https://oapi.dingtalk.com/robot/send?access_token=a68d48b561a32ee60470b51e979f2dbf7b8bf4681c4fa740de9eaadb44721381"
 
         # 生产
         #self.api_url = "https://oapi.dingtalk.com/robot/send?access_token=b8f258163e1bac56cafe168c68e43fe49436126c603d90e02f3ad8247e661ecd"
         self.headers = {'Content-Type': 'application/json'}
 
-    def format_test_results(self, format_result: List[Dict], format_sheetname: str = None) -> str:
+    def format_test_results(self, format_result: List[Dict], report_url: str = None, format_sheetname: str = None) -> str:
         """格式化测试结果"""
         # 统计测试结果
         total_cases = len(format_result)
@@ -51,7 +51,7 @@ class AEUIBot:
 
         # 构建消息内容
         message = (
-            f"### AE_UI自动化测试\n"
+            f"### 📢 AE_UI自动化测试\n"
             f"- 执行时间：{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
             f"- 总用例数：{total_cases}\n"
             f"- 总通过用例：{passed_cases}\n"
@@ -61,7 +61,7 @@ class AEUIBot:
         
         # 添加各sheet的统计信息
         if sheet_stats:
-            message += "\n### 各工作表统计\n"
+            message += "\n### ✅ 各工作表统计\n"
             for sheet_name, stats in sheet_stats.items():
                 sheet_success_rate = (stats['passed'] / stats['total'] * 100) if stats['total'] > 0 else 0
                 message += (
@@ -73,40 +73,46 @@ class AEUIBot:
 
         # 如果有失败的用例，添加失败详情（按sheet名称分组）
         if failed_cases > 0:
-            message += "\n### 失败用例详情\n"
+            message += "\n### ❌ 失败用例详情"
             for sheet_name, failed_cases_list in failed_details_by_sheet.items():
                 message += f"\n**{sheet_name}失败用例:**\n"
                 message += "\n".join(failed_cases_list)
 
         # 加入Allure报告链接
-        allure_report_path = "./allure-report/index.html"
-        import os
-        if os.path.exists(allure_report_path):
-            # 如果是本地文件路径，转换为文件URL格式
-            absolute_path = os.path.abspath(allure_report_path)
-            allure_url = f"file://{absolute_path}"
+        if report_url and report_url.startswith('http'):
+            # 使用可点击的HTTP链接
             message += f"\n### 📊 详细测试报告\n"
-            message += f"- [点击查看Allure详细报告]({allure_url})\n"
-            message += f"- 报告位置: {absolute_path}\n"
+            message += f"- [点击查看Allure详细报告]({report_url})\n"
+            message += f"- 链接有效期：服务器运行期间\n"
         else:
-            message += "\n### 📊 测试报告\n"
-            message += "- Allure报告未生成，请检查allure-results目录\n"
+            # 提供本地文件路径作为备选
+            allure_report_path = "./allure-report/index.html"
+            import os
+            if os.path.exists(allure_report_path):
+                absolute_path = os.path.abspath(allure_report_path)
+                message += f"\n### 📊 详细测试报告\n"
+                message += f"- 报告位置: {absolute_path}\n"
+                message += f"- 请在浏览器中手动打开以上路径查看详细报告\n"
+            else:
+                message += "\n### 📊 测试报告\n"
+                message += "- Allure报告未生成，请检查allure-results目录\n"
 
         return message
 
-    def send_test_results(self,  result: List[Dict], sheet_name: str = None) -> bool:
+    def send_test_results(self, result: List[Dict], report_url: str = None, sheet_name: str = None) -> bool:
         """发送测试结果到钉钉"""
         try:
-            print(f"=== 调试信息：开始发送测试结果 ===")
-            print(f"测试结果数量：{len(result)}")
-            print(f"测试结果内容：{result}")
+            # print(f" AE_Bot.send_test_results 调试信息：开始发送测试结果 ===")
+            # print(f" AE_Bot.send_test_results 测试结果数量：{len(result)}")
+            # print(f" AE_Bot.send_test_results 测试结果内容：{result}")
             
             if not result:
                 print("警告：测试结果为空，跳过发送")
                 return False
                 
-            message = self.format_test_results(result)
-            print(f"格式化后的消息：{message}")
+            message = self.format_test_results(result, report_url)
+
+            print(f"\n格式化后的消息：{message}\n")
             key_word = "UI自动化测试报告"
             data = {
                 "msgtype": "markdown",
