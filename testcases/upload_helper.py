@@ -108,14 +108,15 @@ class UploadHelper:
                                 max_wait_time = 300  # 5分钟
                                 # 检查间隔（秒）
                                 check_interval = 2
-                                
+
                                 # 定义上传完成的检查函数
                                 def is_upload_complete():
+                                    model_elements = driver.find_elements(
+                                        By.XPATH,
+                                        "//div[@class='el-tree el-tree--highlight-current']/div[@class='el-tree-node is-expanded is-focusable'][2]/div[@class='el-tree-node__children']//div[@class='custom_tree_node']//span[text()='BXMD74']"
+                                    )
                                     try:
-                                            
-                                        # 方法3：检查是否出现了上传后的元素（如模型预览或模型名称）
-                                        model_elements = driver.find_elements(By.XPATH, 
-                                            "//div[contains(@class,'label_content')]/span[contains(text(),'BXMD74_15')]")
+                                        # 方检查是否出现了上传后的元素（如模型预览或模型名称）
                                         if model_elements:
                                             return True
                                             
@@ -137,7 +138,8 @@ class UploadHelper:
                                     
                                     # 每次检查间隔输出一次日志，显示已等待时间
                                     if int((time.time() - start_time) / 10) * 10 == int(time.time() - start_time):
-                                        logger.info(f"正在等待上传完成，已等待: {time.time() - start_time:.2f}秒")
+
+                                        logger.info(f"正在匹配元素,等待上传完成，已等待: {time.time() - start_time:.2f}秒")
                                     
                                     time.sleep(check_interval)
                                 

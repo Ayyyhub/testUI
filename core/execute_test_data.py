@@ -1,5 +1,5 @@
 import time
-
+from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -7,7 +7,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from utils.excell_reader import Excellreader, AETestData  # 导入你的ExcelReader和TestData
 from pages.base_page import BasePase
 from utils.perfomance.performance_decorator import monitored_performancer
-from utils.wait_clickable import wait_overlays_gone
+from utils.wait_clickable import wait_overlays_gone, wait_element_visible, wait_element_clickable
 
 
 class UITestExecutor:
@@ -123,12 +123,14 @@ class UITestExecutor:
 
                             # 点击前等待遮罩消失
                             wait_overlays_gone(self.driver,timeout=10)
+                            wait_element_visible(self.driver, (by, value), timeout=10)
+                            wait_element_clickable(self.driver, (by, value), timeout=10)
 
-                            # presence_of_element_located	只检查元素在DOM中存在	需要获取元素属性、文本内容等
-                            # element_to_be_clickable	检查存在+可见+可点击	需要进行点击操作时
+                            # ===== presence_of_element_located	只检查元素在DOM中存在	需要获取元素属性、文本内容等 =====
+                            # ===== element_to_be_clickable	检查存在+可见+可点击	需要进行点击操作时 =====
                             clickable_elem = self.wait.until(EC.element_to_be_clickable((by, value)))
-                            try:
 
+                            try:
                                 # 先滚动到视图中间
                                 self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});",
                                                            clickable_elem)
@@ -139,6 +141,9 @@ class UITestExecutor:
                                     print("第{}步点击被拦截，清理遮罩后重试...".format(i + 1))
 
                                     wait_overlays_gone(self.driver,timeout=10)
+                                    wait_element_visible(self.driver, (by, value), timeout=10)
+                                    wait_element_clickable(self.driver, (by, value), timeout=10)
+
                                     try:
                                         clickable_elem = self.wait.until(EC.element_to_be_clickable((by, value)))
                                         self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});",
@@ -170,22 +175,27 @@ class UITestExecutor:
                                 locator_dict["locators"][1][1]
                             ))
                         )
-                        
+
                         # 确保元素可见和可交互
                         self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", drag_elem)
                         time.sleep(1)  # 等待滚动完成
-                        
+
                         # 执行拖拽
                         action_drag = ActionChains(self.driver)
-                        action_drag.drag_and_drop(drop_elem, drag_elem).perform()
+                        #action_drag.drag_and_drop(drag_elem, drop_elem).perform()
+                        action_drag.click_and_hold(drag_elem).pause(1).move_to_element(drop_elem).pause(
+                            1).release().perform()
                         time.sleep(1)  # 等待拖拽动画完成
                         step.outputed_result = "拖拽操作成功"
                         step.status = "PASS"
-                        print(step.status)
+                        return
+
                     except Exception as e:
                         print(f"拖拽操作失败: {str(e)}")
                         step.outputed_result = f"拖拽操作失败: {str(e)}"
                         step.status = "FAIL"
+                        return
+
                 else:
                     raise ValueError(f"连续操作不支持的操作类型: [{step.determin_type}]，支持的操作类型有: click, drag_and_drop")
             
@@ -208,7 +218,7 @@ class UITestExecutor:
                         EC.presence_of_element_located((by, value))
                         #EC.element_to_be_clickable((by, value))
                     )
-                    if step.determin_method=="input":
+                    if step.determin_type=="input":
                         print(f"普通定位成功，定位方式：[{by}]，定位值：[{value}],输入数据：[{step.input_value}]")
                     else:
                         print(f"普通定位成功，定位方式：[{by}]，值：[{value}]")
@@ -218,6 +228,7 @@ class UITestExecutor:
             # ============ 执行点击 ============
             # 3. 根据操作类型执行动作（click/input/verify等）
             action = step.determin_type  # 假设Excel中"操作类型"字段存click/input等
+
             if action == "click":
                 # element 已经是定位到的元素了，不需要再用 element if element else (by, value) 判断。
                 clickable_elem = self.wait.until(
@@ -253,15 +264,45 @@ class UITestExecutor:
                         raise e
 
             elif action == "input":
-                element.clear()
-                element.send_keys(step.input_value)
-
-                # new_value = step.input_value  # 要设置的新值
-                # self.driver.execute_script(f"arguments[0].value = '{new_value}';", element)
-
-                time.sleep(1)
-                step.outputed_result = f"输入内容: {step.input_value}"
-                step.status = "PASS"
+                try:
+                    input_element = self.wait.until(
+                        EC.element_to_be_clickable((by, value))
+                    )
+                    input_element.click()
+                    time.sleep(0.2)
+                    # 清空现有内容
+                    input_element.send_keys(Keys.CONTROL + "a")
+                    time.sleep(0.2)
+                    input_element.send_keys(Keys.DELETE)
+                    time.sleep(0.2)
+                    # 输入新值
+                    input_element.send_keys(step.input_value)
+                    # 可选：点击空白处触发失焦，确保值生效
+                    # self.driver.find_element(By.TAG_NAME, "body").click()
+                    time.sleep(0.5)
+                    # 同时获取两个属性的值（处理可能的 None 值）
+                    actual_value = input_element.get_attribute("value") or "无value属性"
+                    actual_aria = input_element.get_attribute("aria-valuenow") or "无aria-valuenow属性"
+                    # 统一转为字符串，避免类型差异导致的比较失败
+                    expected_str = str(step.input_value)
+                    actual_value_str = str(actual_value)
+                    actual_aria_str = str(actual_aria)
+                    # 验证：只要其中一个属性匹配，就判定为成功
+                    if expected_str in [actual_value_str, actual_aria_str]:
+                        step.outputed_result = (
+                            f"输入成功: {step.input_value}\n"
+                            f"验证属性：value={actual_value}，aria-valuenow={actual_aria}"
+                        )
+                        step.status = "PASS"
+                    else:
+                        step.outputed_result = (
+                            f"输入验证失败，预期: {step.input_value}\n"
+                            f"实际属性：value={actual_value}，aria-valuenow={actual_aria}"
+                        )
+                        step.status = "FAIL"
+                except Exception as e:
+                    step.outputed_result = f"输入操作失败: {e}"
+                    step.status = "FAIL"
 
             elif action == "context_click":
                 action_context = ActionChains(self.driver)
@@ -289,7 +330,10 @@ class UITestExecutor:
                     EC.element_to_be_clickable(element if element else (by, value))
                 )
                 try:
-                    action_double.double_click(action_double_elem).perform()
+                    time.sleep(1)
+                    #action_double.double_click(action_double_elem).perform()
+                    #action_double.move_to_element(action_double_elem).double_click().perform()
+                    action_double.click(action_double_elem).pause(0.1).double_click(action_double_elem).perform()
                     time.sleep(2)
                     step.outputed_result = "点击成功"
                     step.status = "PASS"
@@ -314,8 +358,9 @@ class UITestExecutor:
                     step.status = "FAIL"
 
             else:
-                step.outputed_result = f"不支持的操作类型: {action}"
+                step.outputed_result = f"不支持的操作类型: {action}，支持的操作类型有: click, input, context_click, double_click, verify, drag_and_drop"
                 step.status = "ERROR"
+                print(f"❌ 步骤 {step.step_id} 操作类型不被支持: {action}")
 
         except Exception as e:
             step.outputed_result = f"操作失败: {str(e)}"

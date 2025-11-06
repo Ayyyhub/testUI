@@ -14,6 +14,7 @@ class AEUIBot:
 
         # 生产
         #self.api_url = "https://oapi.dingtalk.com/robot/send?access_token=b8f258163e1bac56cafe168c68e43fe49436126c603d90e02f3ad8247e661ecd"
+
         self.headers = {'Content-Type': 'application/json'}
 
     def format_test_results(self, format_result: List[Dict], report_url: str = None, format_sheetname: str = None) -> str:

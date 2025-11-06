@@ -8,6 +8,7 @@ from testcases.login_helper import Login_Helper
 
 from testcases.test_workflow01 import Test_truework01
 from testcases.test_workflow02 import Test_truework02
+from testcases.test_workflow03 import Test_truework03
 from utils.allure.allure_customed import save_results_as_allure, send_dingtalk_message_with_report
 
 
@@ -32,7 +33,7 @@ def run_main(driver, is_allure_mode=False):
         #print(f"=== 调试信息：Test_truework01执行完成，结果：{workflow01_results} ===")
         if workflow01_results:
             test_results_noallure.extend(workflow01_results)
-            #print(f"=== 调试信息 workflow01_results的数据结构: {all_test_results}")
+            #print(f"=== 调试信息 workflow01_results的数据结构: {test_results_noallure}")
 
         #2. 运动副工作流
         print("=== 调试信息：开始执行Test_truework02 ===")
@@ -41,11 +42,18 @@ def run_main(driver, is_allure_mode=False):
         #print(f"=== 调试信息：Test_truework02执行完成，结果：{workflow02_results} ===")
         if workflow02_results:
             test_results_noallure.extend(workflow02_results)
-            #print(f"=== 调试信息 workflow02_results的数据结构: {all_test_results}")
+            #print(f"=== 调试信息 workflow02_results的数据结构: {test_results_noallure}")
+
+        # #3. 路径生成程序
+        # test_truework03_example = Test_truework03()
+        # workflow03_results = test_truework03_example.test_truework03_func(driver)
+        # if workflow03_results:
+        #     test_results_noallure.extend(workflow03_results)
+
 
         logger.info("=== 所有测试执行完成 ===")
 
-        ### 在"非Allure模式"(手动执行)下才在run_main中发送钉钉消息，但是有问题！！！
+        # === 在"非Allure模式"(手动执行)下才在run_main中发送钉钉消息，但是有问题！！！===
         if not is_allure_mode:
             # 发送总测试结果到钉钉
             #print(f"=== 调试信息：准备发送测试结果 ===")

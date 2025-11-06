@@ -8,7 +8,7 @@ from core.browser_engine import BrowserEngine
 import subprocess
 import time
 import threading
-
+import socket
 
 
 # """使用Allure运行测试"""
@@ -43,39 +43,52 @@ import threading
 #         driver.quit()
 
 
+
 # """将测试结果保存为Allure格式"""
 def save_results_as_allure(test_results):
-
     if not test_results:
         print("警告：没有测试结果数据，创建空的Allure报告")
         return
+
+    print(f"=== SUITE调试: 开始处理 {len(test_results)} 个测试用例")
+
+    # 分析Suite分布
+    suite_distribution = {}
+    for test_case in test_results:
+        sheet_name = test_case.get('sheet_name', '未知工作表')
+        suite_distribution[sheet_name] = suite_distribution.get(sheet_name, 0) + 1
+
+    print(f"=== SUITE分布统计:")
+    for suite, count in suite_distribution.items():
+        print(f"    {suite}: {count} 个用例")
 
     # 清理之前的测试结果
     if os.path.exists("./allure-results"):
         shutil.rmtree("./allure-results")
     os.makedirs("./allure-results", exist_ok=True)
 
-    # 计算每个工作流的偏移量，避免不同工作流的时间戳冲突
+    # 为每个工作流分配唯一的偏移量
     workflow_offsets = {}
     current_offset = 0
-    
-    # 为每个工作流分配唯一的偏移量
     for test_case in test_results:
         sheet_name = test_case.get('sheet_name', '未知工作表')
         if sheet_name not in workflow_offsets:
             workflow_offsets[sheet_name] = current_offset
-            # 假设每个工作流最多有1000个测试用例，预留足够的间隔
-            current_offset += 1000000  # 1000秒间隔
+            current_offset += 1000000
+
+    print(f"=== SUITE偏移量配置: {workflow_offsets}")
 
     # 为每个测试用例创建详细的Allure结果
-    case_counters = {}  # 记录每个工作流中的用例序号
+    case_counters = {}
+    suite_files = {}  # 按suite记录文件
+
     for i, test_case in enumerate(test_results):
         test_case_id = test_case.get('test_case_id', f'test-case-{i}')
         description = test_case.get('description', '无描述')
         status = test_case.get('status', 'unknown')
         sheet_name = test_case.get('sheet_name', '未知工作表')
 
-        # 转换状态为Allure格式（正确处理各种状态）
+        # 状态转换
         if status == "PASS":
             allure_status = "passed"
         elif status == "FAIL":
@@ -85,26 +98,33 @@ def save_results_as_allure(test_results):
         else:
             allure_status = "unknown"
 
-        # 更新工作流计数器（每个用例处理时都递增对应工作流的计数器）
+        # 更新计数器
         if sheet_name not in case_counters:
-            case_counters[sheet_name] = 0  # 第一个用例序号为0
+            case_counters[sheet_name] = 0
         else:
-            case_counters[sheet_name] += 1  # 后续用例递增序号
-        
-        # 获取当前用例在该工作流中的序号
+            case_counters[sheet_name] += 1
+
         case_index = case_counters[sheet_name]
 
-        # 创建时间戳（确保每个测试用例有不同的时间，按执行顺序排列）
-        # 使用工作流偏移量加上递增的偏移量，确保不同工作流之间不会冲突
-        base_time = 1700000000000  # 使用固定的起始时间戳
+        # 时间戳计算
+        base_time = 1700000000000
         workflow_offset = workflow_offsets.get(sheet_name, 0)
-        start_time = base_time + workflow_offset + case_index * 1000  # 每个用例间隔1秒
-        stop_time = start_time + 500  # 每个用例执行0.5秒
-        print(f"=== Allure调试：测试用例 {test_case['test_case_id']} 时间戳: {start_time} (工作流: {sheet_name}, 序号: {case_index})")
+        start_time = base_time + workflow_offset + case_index * 1000
+        stop_time = start_time + 500
 
-        # 创建详细的测试结果（符合Allure 2.0标准格式）
+        # 创建唯一标识符 - 关键修改！
+        unique_test_id = f"{sheet_name}_{test_case_id}"
+        import time
+        current_time = int(time.time() * 1000000)
+        unique_uuid = f"{sheet_name}-{test_case_id}-{current_time}"
+
+        print(f"=== SUITE处理: [{sheet_name}] -> {test_case_id}")
+        print(f"    UUID: {unique_uuid}")
+        print(f"    historyId: {unique_test_id}")
+
+        # 创建测试结果 - 特别注意labels结构
         allure_result = {
-            "name": description,
+            "name": f"{test_case_id}: {description}",
             "status": allure_status,
             "statusDetails": {
                 "known": False,
@@ -115,17 +135,21 @@ def save_results_as_allure(test_results):
             },
             "start": start_time,
             "stop": stop_time,
-            "uuid": f"{test_case_id}-{sheet_name}-{case_index}-{datetime.now().strftime('%Y%m%d%H%M%S%f')}-{hash(description)}",
-            "historyId": test_case_id,
-            "testCaseId": test_case_id,
-            "fullName": f"{sheet_name} - {description}",
+            "uuid": unique_uuid,
+            "historyId": unique_test_id,  # 必须唯一，否则会覆盖
+            "testCaseId": unique_test_id,  # 必须唯一，否则会覆盖
+            "fullName": f"{sheet_name}.{test_case_id}",
             "labels": [
+                # Suite相关标签 - 控制层级结构
                 {"name": "suite", "value": sheet_name},
                 {"name": "feature", "value": description},
-                {"name": "story", "value": test_case_id},
+                {"name": "story", "value": unique_test_id},
+
+                # 其他标签
                 {"name": "severity", "value": "normal"},
                 {"name": "framework", "value": "pytest"},
-                {"name": "language", "value": "python"}
+                {"name": "language", "value": "python"},
+                {"name": "package", "value": f"tests.{sheet_name}"}
             ],
             "links": [],
             "parameters": [
@@ -134,7 +158,7 @@ def save_results_as_allure(test_results):
             ],
             "steps": [
                 {
-                    "name": "执行测试用例",
+                    "name": f"执行{test_case_id}",
                     "status": allure_status,
                     "start": start_time,
                     "stop": stop_time,
@@ -143,16 +167,41 @@ def save_results_as_allure(test_results):
             ]
         }
 
-        # 保存结果文件
-        result_file = f"./allure-results/{allure_result['uuid']}-result.json"
+        # 保存文件
+        result_file = f"./allure-results/{unique_uuid}-result.json"
         with open(result_file, 'w', encoding='utf-8') as f:
             json.dump(allure_result, f, ensure_ascii=False, indent=2)
 
-        print(f"✓ 保存Allure测试结果: {sheet_name} - {test_case_id} - {description} - {status} - 序号{case_index}")
+        # 记录suite文件统计
+        if sheet_name not in suite_files:
+            suite_files[sheet_name] = []
+        suite_files[sheet_name].append(result_file)
 
-    print(f"✓ 共保存 {len(test_results)} 个测试用例的Allure结果")
+        print(f"✓ 保存到Suite [{sheet_name}]: {test_case_id}")
 
-    # 创建一个环境信息文件
+    # 最终统计
+    print(f"\n=== SUITE最终统计 ===")
+    total_files = 0
+    for suite, files in suite_files.items():
+        print(f"Suite [{suite}]: {len(files)} 个文件")
+        total_files += len(files)
+
+    print(f"总文件数: {total_files}")
+    print(f"期望文件数: {len(test_results)}")
+
+    # 验证实际生成的文件
+    import glob
+    actual_files = glob.glob("./allure-results/*-result.json")
+    print(f"实际生成文件数: {len(actual_files)}")
+
+    if len(actual_files) != len(test_results):
+        print("⚠️ 警告: 文件数量不匹配! 可能存在覆盖")
+        # 列出所有生成的文件
+        print("生成的文件列表:")
+        for file in actual_files:
+            print(f"  {file}")
+
+    # 环境信息文件
     environment_info = {
         "python_version": sys.version,
         "platform": sys.platform,
@@ -163,100 +212,6 @@ def save_results_as_allure(test_results):
         for key, value in environment_info.items():
             f.write(f"{key}={value}\n")
 
-# def save_results_as_allure(test_results):
-#     if not test_results:
-#         print("警告：没有测试结果数据，创建空的Allure报告")
-#         return
-#
-#     # 清理之前的测试结果
-#     if os.path.exists("./allure-results"):
-#         shutil.rmtree("./allure-results")
-#     os.makedirs("./allure-results", exist_ok=True)
-#
-#     # 为每个测试用例创建详细的Allure结果
-#     for i, test_case in enumerate(test_results):
-#         test_case_id = test_case.get('test_case_id', f'test-case-{i}')
-#         description = test_case.get('description', '无描述')
-#         status = test_case.get('status', 'unknown')
-#         sheet_name = test_case.get('sheet_name', '未知工作表')
-#
-#         # 转换状态为Allure格式
-#         if status == "PASS":
-#             allure_status = "passed"
-#         elif status == "FAIL":
-#             allure_status = "failed"
-#         elif status == "ERROR":
-#             allure_status = "broken"
-#         else:
-#             allure_status = "unknown"
-#
-#         # 使用全局索引确保时间戳顺序正确
-#         base_time = 1700000000000
-#         start_time = base_time + i * 1000  # 每个用例间隔1秒
-#         stop_time = start_time + 500  # 每个用例执行0.5秒
-#
-#         print(f"=== Allure调试：测试用例 {test_case_id} 时间戳: {start_time} (全局序号: {i})")
-#
-#         # 创建详细的测试结果
-#         allure_result = {
-#             "name": description,
-#             "status": allure_status,
-#             "statusDetails": {
-#                 "known": False,
-#                 "muted": False,
-#                 "flaky": False,
-#                 "message": "请查看Log日志..." if status != "PASS" else None,
-#                 "trace": "请查看Log日志..." if status != "PASS" else None
-#             },
-#             "start": start_time,
-#             "stop": stop_time,
-#             "uuid": f"{test_case_id}-{i}-{datetime.now().strftime('%Y%m%d%H%M%S%f')}",
-#             "historyId": test_case_id,
-#             "testCaseId": test_case_id,
-#             "fullName": f"{sheet_name} - {description}",
-#             "labels": [
-#                 {"name": "suite", "value": sheet_name},
-#                 {"name": "feature", "value": description},
-#                 {"name": "story", "value": test_case_id},
-#                 {"name": "severity", "value": "normal"},
-#                 {"name": "framework", "value": "pytest"},
-#                 {"name": "language", "value": "python"}
-#             ],
-#             "links": [],
-#             "parameters": [
-#                 {"name": "工作表", "value": sheet_name},
-#                 {"name": "用例ID", "value": test_case_id}
-#             ],
-#             "steps": [
-#                 {
-#                     "name": "执行测试用例",
-#                     "status": allure_status,
-#                     "start": start_time,
-#                     "stop": stop_time,
-#                     "steps": []
-#                 }
-#             ]
-#         }
-#
-#         # 保存结果文件
-#         result_file = f"./allure-results/{allure_result['uuid']}-result.json"
-#         with open(result_file, 'w', encoding='utf-8') as f:
-#             json.dump(allure_result, f, ensure_ascii=False, indent=2)
-#
-#         print(f"✓ 保存Allure测试结果: {sheet_name} - {test_case_id} - {status} - 全局序号{i}")
-#
-#     print(f"✓ 共保存 {len(test_results)} 个测试用例的Allure结果")
-#
-#     # 创建环境信息文件
-#     environment_info = {
-#         "python_version": sys.version,
-#         "platform": sys.platform,
-#         "timestamp": datetime.now().isoformat()
-#     }
-#
-#     with open("./allure-results/environment.properties", 'w', encoding='utf-8') as f:
-#         for key, value in environment_info.items():
-#             f.write(f"{key}={value}\n")
 
 # """生成Allure报告"""
 def generate_allure_report():
@@ -275,7 +230,6 @@ def generate_allure_report():
             return None
 
         print(f"找到 {len(result_files)} 个测试结果文件")
-
 
         # 首先检查allure命令是否可用
         try:
@@ -300,7 +254,7 @@ def generate_allure_report():
                 if result.returncode == 0:
                     print("✓ Allure报告生成成功！")
 
-                    # 启动本地HTTP服务器并返回URL
+                    # 直接使用allure open命令启动服务器并获取URL
                     return start_allure_server()
                 else:
                     print(f"❌ Allure报告生成失败: {result.stderr}")
@@ -316,79 +270,69 @@ def generate_allure_report():
 
 
 # """启动Allure本地服务器并返回可访问的URL"""
+
+def find_available_port(start_port=8080, max_attempts=50):
+    """查找可用的端口"""
+    for port in range(start_port, start_port + max_attempts):
+        try:
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                s.bind(('localhost', port))
+                return port
+        except OSError:
+            continue
+    return start_port  # 如果都不可用，返回起始端口
+
+
 def start_allure_server():
-
-
+    """启动Allure服务器，自动处理端口占用"""
     try:
-        # 启动allure open命令（非阻塞方式）
-        server_process = subprocess.Popen(
-            ["allure", "open", "./allure-report", "-p", "8080"],
+        if not os.path.exists("./allure-report"):
+            print("❌ 未找到allure-report目录")
+            return None
+
+        print("🚀 启动Allure报告服务器...")
+
+        # 查找可用端口
+        port = find_available_port(8080)
+
+        # 使用指定端口启动allure
+        process = subprocess.Popen(
+            ["allure", "open", "./allure-report", "-p", str(port)],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             text=True,
             shell=True
         )
 
+        # 获取本机IP
+        def get_local_ip():
+            try:
+                s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+                s.connect(("8.8.8.8", 80))
+                ip = s.getsockname()[0]
+                s.close()
+                return ip
+            except:
+                return "localhost"
+
+        local_ip = get_local_ip()
+
         # 等待服务器启动
         time.sleep(3)
 
-        # 检查服务器是否正常运行
-        import requests
-        try:
-            response = requests.get("http://localhost:8080", timeout=5)
-            if response.status_code == 200:
-                allure_url = "http://localhost:8080"
-                print(f"✓ Allure服务器已启动: {allure_url}")
+        # 构建URL
+        url = f"http://{local_ip}:{port}"
 
-                # 在后台保持服务器运行
-                def keep_server_alive():
-                    try:
-                        server_process.wait()
-                    except:
-                        pass
+        print(f"✅ Allure服务器已启动在端口 {port}")
+        print(f"📍 本地访问: http://localhost:{port}")
+        print(f"🌐 远程访问: {url}")
+        print("💡 请确保防火墙已开放相应端口")
 
-                threading.Thread(target=keep_server_alive, daemon=True).start()
-
-                return allure_url
-        except:
-            pass
-
-        # 如果8080端口被占用，尝试其他端口
-        for port in [8081, 8082, 8083, 8084]:
-            try:
-                server_process.terminate()
-                server_process = subprocess.Popen(
-                    ["allure", "open", "./allure-report", "-p", str(port)],
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE,
-                    text=True,
-                    shell=True
-                )
-
-                time.sleep(3)
-
-                try:
-                    response = requests.get(f"http://localhost:{port}", timeout=5)
-                    if response.status_code == 200:
-                        allure_url = f"http://localhost:{port}"
-                        print(f"✓ Allure服务器已启动: {allure_url}")
-
-                        # 在后台保持服务器运行
-                        threading.Thread(target=keep_server_alive, daemon=True).start()
-
-                        return allure_url
-                except:
-                    continue
-
-            except:
-                continue
-
-        print("⚠ 无法启动Allure服务器，将使用文件路径")
-        return os.path.abspath("./allure-report/index.html")
+        return url
 
     except Exception as e:
-        print(f"❌ 启动Allure服务器失败: {e}")
-        return os.path.abspath("./allure-report/index.html")
+        print(f"❌ 启动Allure服务器时发生异常: {e}")
+        return "Allure服务器启动异常"
 
 
 # """在Allure报告生成后发送钉钉消息"""

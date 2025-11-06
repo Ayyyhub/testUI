@@ -22,7 +22,6 @@ class customed_assertion:
 
     """断言弹窗关闭（元素不可见）"""
     def assert_popup_closed(driver, popup_xpath):
-
         try:
             # 等待元素不可见
             WebDriverWait(driver, 10).until(
@@ -31,11 +30,6 @@ class customed_assertion:
         except Exception as e:
             raise AssertionError(f"弹窗未关闭：{str(e)}")
 
-    """断言页面跳转（新页面元素可见）"""
-    #def assert_page_jump(driver, new_page_xpath):
-
-        # assert_element_visible(driver, new_page_xpath)
-
 
     """断言元素属性状态（启用 / 禁用 / 未选中）"""
     def assert_element_status(driver, xpath, expected_attr, expected_value):
@@ -43,6 +37,10 @@ class customed_assertion:
         element = driver.find_element(By.XPATH, xpath)
         actual_value = element.get_attribute(expected_attr)
         assert actual_value == expected_value, f"元素属性 {expected_attr} 预期{expected_value}，实际{actual_value}"
+
+
+    """断言页面跳转（新页面元素可见）"""
+    # def assert_page_jump(driver, new_page_xpath):
 
 
     """先输入值，再判断"""

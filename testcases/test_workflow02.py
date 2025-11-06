@@ -1,6 +1,5 @@
 import pytest
 from selenium.webdriver import ActionChains
-
 from AEUI_Bot import AEUIBot
 from core.assertion import customed_assertion
 from core.execute_test_data import UITestExecutor
@@ -47,12 +46,15 @@ class Test_truework02:
             if data:
                 print("\n" + "="*50)  # 添加分隔线
                 print(f"执行测试用例：{data}")
-                # 执行excell元素流程测试
+
                 # monitor.start()
                 try:
+                    # 执行excell元素流程测试
                     execute = UITestExecutor(driver)
 
                     execute.execute_step(data)
+
+                    # print(f"每一步都看看{data.test_case_id}-{data.status}")
 
                     # # 进行断言检查
                     # if cs_assert.assert_element_visible(data.expected_result):
@@ -78,10 +80,10 @@ class Test_truework02:
                 'status': data.status,  # 使用 execute_step 设置的 status
                 'sheet_name': current_sheet,
             })
+            #print(f"append看看：{self.test_results}")
 
-        # # 发送测试结果到钉钉
-        # bot = AEUIBot()
-        # bot.send_test_results(self.test_results, sheet_name=current_sheet)
+        # print(f"让我看看：{self.test_results}")
+
         # 返回测试结果
         return self.test_results
 

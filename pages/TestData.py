@@ -9,7 +9,7 @@ class AETestData:
     test_case_id: str
     description:str          #流程描述
     step_id: str          #步骤序号
-    determin_type: str    #定位类型
+    determin_type: str    #操作类型
     determin_method: str  #定位方式
     determin_value: str   #定位值
     input_value: str      #输入的值
