@@ -10,9 +10,8 @@ from selenium.webdriver.common.by import By
 
 class NewcreateHelper:
 
-
     # @pytest.mark.dependency(depends=["login"],name="newcreate")
-    #@pytest.mark.run(order=2)
+    # @pytest.mark.run(order=2)
     def newcreate_func(self, driver):
         logger.info("=== 开始执行点击新建场景 ===")
         self.driver = driver  # 保存driver到实例，后续用self.driver,如果后续有其他方法在同一个类下，无需再传 driver 参数
@@ -22,7 +21,8 @@ class NewcreateHelper:
 
             wait_overlays_gone(self.driver, timeout=10)
 
-            new_clik = driver.find_element(By.XPATH, '//div[@class="icon_and_text" and span[text()="新建"]]')
+            new_clik = driver.find_element(
+                By.XPATH, '//div[@class="icon_and_text" and span[text()="新建"]]')
             new_clik.click()
             time.sleep(3)
             # 断言
@@ -30,7 +30,7 @@ class NewcreateHelper:
             tab_info = basepage.get_xinjianNum()
 
             if tab_info['count'] >= 1:
-                print("与预期结果一致,断言新建场景成功")
+                logger.info("与预期结果一致,断言新建场景成功")
                 # try:
                 #     logger.info("##### 开始上传模型 #####")
                 #     time.sleep(2)

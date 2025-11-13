@@ -8,7 +8,7 @@ class customed_assertion:
     def __init__(self,driver):
         self.driver = driver
 
-    """元素可见性 / 存在性”"""
+    """ "元素可见性 / 存在性" """
     # 确保 “预期结果的元素路径（xpath）” 是唯一且稳定的
     def assert_element_visible(self, xpath):
         try:
@@ -17,6 +17,7 @@ class customed_assertion:
             )
             return element.is_displayed()  # 返回布尔值
         except Exception as e:
+
             print(f"断言失败：{str(e)}")
             return False  # 断言失败返回False
 

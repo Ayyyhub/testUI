@@ -8,7 +8,7 @@ from utils.excell_reader import Excellreader, AETestData  # 导入你的ExcelRea
 from pages.base_page import BasePase
 from utils.perfomance.performance_decorator import monitored_performancer
 from utils.wait_clickable import wait_overlays_gone, wait_element_visible, wait_element_clickable
-
+from Log.logger import logger
 
 class UITestExecutor:
     def __init__(self, driver):
@@ -90,11 +90,11 @@ class UITestExecutor:
     def execute_step(self, step):
         """根据测试步骤执行UI操作（兼容分层定位和连续操作）"""
         try:
-            print(f"执行步骤 {step.step_id}: {step.description}")
+            logger.info(f"execute_step 步骤 {step.step_id}: {step.description}")
             if step.determin_type=="input":
-                print(f"操作类型：[{step.determin_type}], 定位方式: [{step.determin_method}], 定位值: [{step.determin_value}], 输入值：[{step.input_value}]")
+                logger.info(f"操作类型：[{step.determin_type}], 定位方式: [{step.determin_method}], 定位值: [{step.determin_value}], 输入值：[{step.input_value}]")
             else:
-                print(f"操作类型：[{step.determin_type}], 定位方式: [{step.determin_method}], 定位值: [{step.determin_value}]")
+                logger.info(f"操作类型：[{step.determin_type}], 定位方式: [{step.determin_method}], 定位值: [{step.determin_value}]")
             element = None
             by = None
             value = None
@@ -103,7 +103,7 @@ class UITestExecutor:
             try:
                 locator_dict = self.get_locator(step.determin_method, step.determin_value)
             except Exception as e:
-                print(f"❌ 获取定位器失败: {str(e)}")
+                logger.info(f"❌ 获取定位器失败: {str(e)}")
                 step.outputed_result = f"获取定位器失败: {str(e)}"
                 step.status = "FAIL"
                 return
@@ -116,7 +116,7 @@ class UITestExecutor:
                     # 执行每一步定位和点击
                     for i, loc in enumerate(locator_dict['locators']):
                         by, value = loc
-                        print(f"执行第{i+1}步定位: 方式：[{by}], 值：[{value}]")
+                        logger.info(f"执行第{i+1}步定位: 方式：[{by}], 值：[{value}]")
 
                         # 当有多个元素时，除了最后一个元素外，其他都执行点击
                         if i < len(locator_dict['locators']) - 1:
@@ -135,10 +135,10 @@ class UITestExecutor:
                                 self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});",
                                                            clickable_elem)
                                 clickable_elem.click()
-                                print(f"第{i + 1}步点击成功")
+                                logger.info(f"第{i + 1}步点击成功")
                             except Exception as e:
                                 if "element click intercepted" in str(e).lower():
-                                    print("第{}步点击被拦截，清理遮罩后重试...".format(i + 1))
+                                    logger.info("第{}步点击被拦截，清理遮罩后重试...".format(i + 1))
 
                                     wait_overlays_gone(self.driver,timeout=10)
                                     wait_element_visible(self.driver, (by, value), timeout=10)
@@ -149,17 +149,17 @@ class UITestExecutor:
                                         self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});",
                                                                    clickable_elem)
                                         clickable_elem.click()
-                                        print(f"第{i + 1}步点击成功（重试）")
+                                        logger.info(f"第{i + 1}步点击成功（重试）")
                                     except Exception:
                                         # 最后兜底：JS点击
                                         self.driver.execute_script("arguments[0].click();", element)
-                                        print(f"第{i + 1}步通过JavaScript点击成功")
+                                        logger.info(f"第{i + 1}步通过JavaScript点击成功")
                                 else:
                                     raise e
 
                 elif step.determin_type == "drag_and_drop":
                     try:
-                        print(
+                        logger.info(
                             f"执行第1步定位：方式：“{locator_dict['locators'][0][0]}”，值:“{locator_dict['locators'][0][1]}”")
                         drag_elem = self.wait.until(
                             EC.presence_of_element_located((
@@ -167,7 +167,7 @@ class UITestExecutor:
                                 locator_dict["locators"][0][1]
                             ))
                         )
-                        print(
+                        logger.info(
                             f"执行第2步定位：方式：“{locator_dict['locators'][1][0]}”，值:“{locator_dict['locators'][1][1]}”")
                         drop_elem = self.wait.until(
                             EC.presence_of_element_located((
@@ -191,7 +191,7 @@ class UITestExecutor:
                         return
 
                     except Exception as e:
-                        print(f"拖拽操作失败: {str(e)}")
+                        logger.info(f"拖拽操作失败: {str(e)}")
                         step.outputed_result = f"拖拽操作失败: {str(e)}"
                         step.status = "FAIL"
                         return
@@ -207,7 +207,7 @@ class UITestExecutor:
                     parent_elem, child_by, child_value = locator_dict
                     element = parent_elem.find_element(child_by, child_value)
                     by, value = child_by, child_value
-                    print(f"分层定位成功：父容器内找到子元素，定位方式：[{child_by}]，值：[{child_value}]")
+                    logger.info(f"分层定位成功：父容器内找到子元素，定位方式：[{child_by}]，值：[{child_value}]")
 
                 else:
                     # ============普通定位，直接找元素，只有1个定位值！============
@@ -219,9 +219,9 @@ class UITestExecutor:
                         #EC.element_to_be_clickable((by, value))
                     )
                     if step.determin_type=="input":
-                        print(f"普通定位成功，定位方式：[{by}]，定位值：[{value}],输入数据：[{step.input_value}]")
+                        logger.info(f"普通定位成功，定位方式：[{by}]，定位值：[{value}],输入数据：[{step.input_value}]")
                     else:
-                        print(f"普通定位成功，定位方式：[{by}]，值：[{value}]")
+                        logger.info(f"普通定位成功，定位方式：[{by}]，值：[{value}]")
             else:
                 raise ValueError("定位器格式错误，需为元组或字典")
 
@@ -235,15 +235,16 @@ class UITestExecutor:
                     EC.presence_of_element_located((by, value))
                 )
                 try:
+                    logger.info(f"开始执行 {step.determin_type}，{step.description}")
                     time.sleep(1)
                     clickable_elem.click()
                     time.sleep(2)
                     step.outputed_result = "点击成功"
                     step.status = "PASS"
-                    print(step.status)
+
                 except Exception as e:
                     if "element click intercepted" in str(e).lower():
-                        print("常规点击被拦截，清理遮罩后重试...")
+                        logger.info("常规点击被拦截，清理遮罩后重试...")
 
                         wait_overlays_gone(self.driver,timeout=10)
                         try:
@@ -256,11 +257,13 @@ class UITestExecutor:
                             step.outputed_result = "点击成功（重试）"
                             step.status = "PASS"
                         except Exception:
-                            print("重试仍失败，使用JavaScript点击兜底")
+                            logger.info("重试仍失败，使用JavaScript点击兜底")
                             self.driver.execute_script("arguments[0].click();", element)
                             step.outputed_result = "通过JavaScript点击成功"
                             step.status = "PASS"
                     else:
+                        step.outputed_result = "点击失败"
+                        step.status = "FAIL"
                         raise e
 
             elif action == "input":
@@ -317,7 +320,7 @@ class UITestExecutor:
                 except Exception as e:
                     if "element click intercepted" in str(e).lower():
                         # 尝试使用JavaScript点击
-                        print(f"常规点击被拦截，尝试使用JavaScript点击")
+                        logger.info(f"常规点击被拦截，尝试使用JavaScript点击")
                         self.driver.execute_script("arguments[0].click();", element)
                         step.outputed_result = "通过JavaScript点击成功"
                         step.status = "PASS"
@@ -340,7 +343,7 @@ class UITestExecutor:
                 except Exception as e:
                     if "element click intercepted" in str(e).lower():
                         # 尝试使用JavaScript点击
-                        print(f"常规点击被拦截，尝试使用JavaScript点击")
+                        logger.info(f"常规点击被拦截，尝试使用JavaScript点击")
                         self.driver.execute_script("arguments[0].click();", element)
                         step.outputed_result = "通过JavaScript点击成功"
                         step.status = "PASS"
@@ -360,12 +363,12 @@ class UITestExecutor:
             else:
                 step.outputed_result = f"不支持的操作类型: {action}，支持的操作类型有: click, input, context_click, double_click, verify, drag_and_drop"
                 step.status = "ERROR"
-                print(f"❌ 步骤 {step.step_id} 操作类型不被支持: {action}")
+                logger.info(f"❌ 步骤 {step.step_id} 操作类型不被支持: {action}")
 
         except Exception as e:
             step.outputed_result = f"操作失败: {str(e)}"
             step.status = "FAIL"
-            print(f"❌ 步骤 {step.step_id} 执行失败: {str(e)}")
+            logger.info(f"❌ 步骤 {step.step_id} 执行失败: {str(e)}")
 
 
 

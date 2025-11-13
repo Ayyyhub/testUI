@@ -358,3 +358,15 @@ def send_dingtalk_message_with_report(test_results):
         bot = AEUIBot()
         if test_results:
             bot.send_test_results(test_results)
+
+
+
+
+# # 运行测试
+# python test_main.py -v --alluredir=./allure-results
+#
+# # 生成报告 -o: output
+# allure generate ./allure-results -o ./allure-report --clean
+#
+# # 打开报告
+# allure open ./allure-report

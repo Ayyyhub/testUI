@@ -1,8 +1,10 @@
 
 # 测试账号
 test_user:
-  username: "AE1"
-  password: "PeiTian_admin1"
+  - username: "AE1"
+    password: "PeiTian_admin1"
+  - username: "AE11"
+    password: "JfrnUJ.34k"
 
 
 #数据驱动自动化测试文件存放位置
@@ -23,7 +25,4 @@ browser:
   window_size: "1920x1080"
 
 
-# 报告配置
-report:
-  format: "html"
-  output_path: "reports/html"
+#

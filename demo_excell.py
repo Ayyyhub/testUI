@@ -114,6 +114,8 @@ class demo:
             # else:
             #     pytest.fail("上传失败，跳过工作流程测试")
             # self.driver1 = driver1
+
+            # ====== 断言 ======
             cs_assert = customed_assertion(driver1)
             test_data_list2 = excell_reader.get_test_data(sheet_name="demo")
             for data in test_data_list2:

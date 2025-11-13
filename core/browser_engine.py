@@ -40,7 +40,7 @@ class BrowserEngine:
         # 设置Chrome浏览器选项
         options = webdriver.ChromeOptions()
         # options.add_argument('--headless')  # 无头模式，如果需要可视化界面请注释掉这行
-        # options.add_argument('--no-sandbox')
+        options.add_argument('--no-sandbox')
         options.add_argument('--disable-dev-shm-usage')
         options.binary_location = chrome_binary_path  # 设置Chrome浏览器路径
 

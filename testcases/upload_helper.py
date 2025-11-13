@@ -30,7 +30,7 @@ class UploadHelper:
             tab_info = basepage.get_xinjianNum()
 
             if tab_info['count'] >= 1:
-                print("与预期结果一致,断言新建场景成功")
+                logger.info("与预期结果一致,断言新建场景成功")
                 try:
                     logger.info("##### 开始上传模型 #####")
                     time.sleep(2)
