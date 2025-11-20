@@ -3,7 +3,7 @@ from selenium.webdriver.common.action_chains import ActionChains
 from Log.logger import logger
 from core.browser_engine import BrowserEngine
 from pages.base_page import set_x_length_by_css_hierarchy
-from testcases.login_helper import Login_Helper
+from testcases.login_helper import LoginHelper
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -59,7 +59,7 @@ def canvas():
     driver.maximize_window()
     time.sleep(2)
 
-    test_login_example = Login_Helper()
+    test_login_example = LoginHelper()
     test_login_example.login_func(driver)
 
     createmodel_func(driver)  # 保留你原有的创建模型逻辑

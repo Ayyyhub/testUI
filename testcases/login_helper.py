@@ -1,5 +1,5 @@
-import sys
 import pytest
+
 # print("当前使用的Python解释器路径：", sys.executable)
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -10,8 +10,7 @@ from utils.conf_reader import load_config
 from utils.wait_clickable import wait_overlays_gone
 
 
-
-class Login_Helper:
+class LoginHelper:
 
     # def get_available_accounts(self):
     #     """账号生成器，按顺序提供可用账号"""
@@ -33,7 +32,7 @@ class Login_Helper:
 
         # 直接从配置中获取账号列表
         # config['test_user'] 已经是一个包含多个账号字典的列表
-        accounts = config['test_user']
+        accounts = config["test_user"]
 
         for account in accounts:
             yield account
@@ -51,13 +50,15 @@ class Login_Helper:
                 "input[type='text']",
                 "input[name='username']",
                 "#username",
-                ".username"
+                ".username",
             ]
 
             username_field = None
             for selector in username_selectors:
                 try:
-                    username_field = driver.find_element(By.CSS_SELECTOR, selector)
+                    username_field = driver.find_element(
+                        By.CSS_SELECTOR, selector
+                    )
                     break
                 except:
                     continue
@@ -79,13 +80,15 @@ class Login_Helper:
                 "input[type='password']",
                 "input[name='password']",
                 "#password",
-                ".password"
+                ".password",
             ]
 
             password_field = None
             for selector in password_selectors:
                 try:
-                    password_field = driver.find_element(By.CSS_SELECTOR, selector)
+                    password_field = driver.find_element(
+                        By.CSS_SELECTOR, selector
+                    )
                     break
                 except:
                     continue
@@ -119,7 +122,9 @@ class Login_Helper:
                 wait_overlays_gone(driver, timeout=10)
                 return True
             else:
-                logger.info(f"登录失败 - 用户名: {username}, 当前URL: {driver.current_url}")
+                logger.info(
+                    f"登录失败 - 用户名: {username}, 当前URL: {driver.current_url}"
+                )
                 return False
 
         except Exception as e:
@@ -140,12 +145,16 @@ class Login_Helper:
         for attempt in range(max_retries):
             try:
                 account = next(account_generator)
-                username = account['username']
-                password = account['password']
+                username = account["username"]
+                password = account["password"]
 
-                logger.info(f"尝试使用账号登录: {username} (尝试 {attempt + 1}/{max_retries})")
+                logger.info(
+                    f"尝试使用账号登录: {username} (尝试 {attempt + 1}/{max_retries})"
+                )
 
-                success = self.try_login_with_account(driver, username, password)
+                success = self.try_login_with_account(
+                    driver, username, password
+                )
 
                 if success:
                     break
@@ -158,7 +167,9 @@ class Login_Helper:
                 logger.info("所有账号都已尝试，没有可用的账号")
                 break
             except Exception as e:
-                logger.error(f"登录过程中发生异常: {str(e)}")  # 改为 error 级别
+                logger.error(
+                    f"登录过程中发生异常: {str(e)}"
+                )  # 改为 error 级别
                 continue
 
         if not success:
@@ -167,5 +178,3 @@ class Login_Helper:
             logger.info("登录流程完成")
 
         return success
-
-

@@ -10,32 +10,45 @@
 
 from Log.logger import logger
 import datetime
+import time
+
 
 class UIAutomationException(Exception):
     """UI自动化基础异常"""
+
     def __init__(self, message, context=None):
         self.message = message
         self.context = context or {}
         super().__init__(self.message)
 
+
 class ElementOperationException(UIAutomationException):
     """元素操作异常"""
+
     pass
+
 
 class PageStateException(UIAutomationException):
     """页面状态异常"""
+
     pass
+
 
 class BusinessValidationException(UIAutomationException):
     """业务验证异常"""
+
     pass
+
 
 class LoginFlowException(UIAutomationException):
     """登录流程异常"""
+
     pass
+
 
 class DataPreparationException(UIAutomationException):
     """测试数据准备异常"""
+
     pass
 
 
@@ -49,12 +62,14 @@ def capture_exception_context(driver, operation_name, additional_context=None):
         "window_size": driver.get_window_size(),
         "screenshot_path": None,
         "browser_logs": [],
-        **additional_context
+        **additional_context,
     }
 
     try:
         # 自动截图
-        screenshot_path = f"screenshots/error_{operation_name}_{int(time.time())}.png"
+        screenshot_path = (
+            f"screenshots/error_{operation_name}_{int(time.time())}.png"
+        )
         driver.save_screenshot(screenshot_path)
         context["screenshot_path"] = screenshot_path
 
@@ -68,11 +83,7 @@ def capture_exception_context(driver, operation_name, additional_context=None):
     return context
 
 
-
-
-
-
-#推荐的做法（精确分类）
+# 推荐的做法（精确分类）
 # try:
 #     self.click_element(login_button)
 # except ElementNotFoundException as e:

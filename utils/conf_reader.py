@@ -1,7 +1,7 @@
 import os
 import yaml
 
-from core.browser_engine import BrowserEngine
+
 
 
 # 读取配置文件

@@ -1,8 +1,7 @@
-import functools
 import json
 from datetime import datetime
 from Log import logger
-import time
+
 
 class PerformanceCollector:
     """性能数据收集器"""
@@ -10,14 +9,16 @@ class PerformanceCollector:
     def __init__(self):
         self.performance_data = []
 
-    def record_operation(self, operation_name, elapsed_ms, success=True, metadata=None):
+    def record_operation(
+        self, operation_name, elapsed_ms, success=True, metadata=None
+    ):
         """记录操作性能数据"""
         record = {
             "timestamp": datetime.now().isoformat(),
             "operation": operation_name,
             "elapsed_ms": elapsed_ms,
             "success": success,
-            "metadata": metadata or {}
+            "metadata": metadata or {},
         }
         self.performance_data.append(record)
         return record
@@ -25,9 +26,11 @@ class PerformanceCollector:
     def save_to_file(self, filename=None):
         """保存性能数据到文件"""
         if filename is None:
-            filename = f"performance_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+            filename = (
+                f"performance_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+            )
 
-        with open(filename, 'w', encoding='utf-8') as f:
+        with open(filename, "w", encoding="utf-8") as f:
             json.dump(self.performance_data, f, indent=2, ensure_ascii=False)
 
         logger.info(f"📊 性能数据已保存: {filename}")
@@ -39,21 +42,23 @@ class PerformanceCollector:
 
         operations = {}
         for record in self.performance_data:
-            op_name = record['operation']
+            op_name = record["operation"]
             if op_name not in operations:
                 operations[op_name] = []
-            operations[op_name].append(record['elapsed_ms'])
+            operations[op_name].append(record["elapsed_ms"])
 
         stats = {}
         for op_name, times in operations.items():
             stats[op_name] = {
-                'count': len(times),
-                'avg_ms': sum(times) / len(times),
-                'min_ms': min(times),
-                'max_ms': max(times),
-                'p95_ms': sorted(times)[int(len(times) * 0.95)] if len(times) > 1 else times[0]
+                "count": len(times),
+                "avg_ms": sum(times) / len(times),
+                "min_ms": min(times),
+                "max_ms": max(times),
+                "p95_ms": (
+                    sorted(times)[int(len(times) * 0.95)]
+                    if len(times) > 1
+                    else times[0]
+                ),
             }
 
         return stats
-
-

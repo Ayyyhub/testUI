@@ -4,47 +4,14 @@ import sys
 import json
 from datetime import datetime
 from AEUI_Bot import AEUIBot
-from core.browser_engine import BrowserEngine
 import subprocess
 import time
-import threading
 import socket
-
-
-# """使用Allure运行测试"""
-# def run_tests_with_allure():
-#     print("=== 开始执行Allure测试 ===")
-#
-#     # 清理之前的测试结果
-#     import shutil
-#     if os.path.exists("./allure-results"):
-#         shutil.rmtree("./allure-results")
-#     if os.path.exists("./allure-report"):
-#         shutil.rmtree("./allure-report")
-#
-#     # 创建测试结果目录
-#     os.makedirs("./allure-results", exist_ok=True)
-#
-#     # 执行测试并收集结果
-#     browser_engine = BrowserEngine()
-#     driver = browser_engine.initialize_driver()
-#     try:
-#         # 执行测试并收集详细结果
-#         test_results = run_main(driver)
-#
-#         # 将测试结果保存为Allure格式
-#         save_results_as_allure(test_results)
-#
-#         return True
-#     except Exception as e:
-#         print(f"测试执行失败: {e}")
-#         return False
-#     finally:
-#         driver.quit()
+import glob
 
 
 
-# """将测试结果保存为Allure格式"""
+"""将测试结果保存为Allure格式"""
 def save_results_as_allure(test_results):
     if not test_results:
         print("警告：没有测试结果数据，创建空的Allure报告")
@@ -55,10 +22,12 @@ def save_results_as_allure(test_results):
     # 分析Suite分布
     suite_distribution = {}
     for test_case in test_results:
-        sheet_name = test_case.get('sheet_name', '未知工作表')
-        suite_distribution[sheet_name] = suite_distribution.get(sheet_name, 0) + 1
+        sheet_name = test_case.get("sheet_name", "未知工作表")
+        suite_distribution[sheet_name] = (
+            suite_distribution.get(sheet_name, 0) + 1
+        )
 
-    print(f"=== SUITE分布统计:")
+    print("=== SUITE分布统计:")
     for suite, count in suite_distribution.items():
         print(f"    {suite}: {count} 个用例")
 
@@ -71,7 +40,7 @@ def save_results_as_allure(test_results):
     workflow_offsets = {}
     current_offset = 0
     for test_case in test_results:
-        sheet_name = test_case.get('sheet_name', '未知工作表')
+        sheet_name = test_case.get("sheet_name", "未知工作表")
         if sheet_name not in workflow_offsets:
             workflow_offsets[sheet_name] = current_offset
             current_offset += 1000000
@@ -83,10 +52,10 @@ def save_results_as_allure(test_results):
     suite_files = {}  # 按suite记录文件
 
     for i, test_case in enumerate(test_results):
-        test_case_id = test_case.get('test_case_id', f'test-case-{i}')
-        description = test_case.get('description', '无描述')
-        status = test_case.get('status', 'unknown')
-        sheet_name = test_case.get('sheet_name', '未知工作表')
+        test_case_id = test_case.get("test_case_id", f"test-case-{i}")
+        description = test_case.get("description", "无描述")
+        status = test_case.get("status", "unknown")
+        sheet_name = test_case.get("sheet_name", "未知工作表")
 
         # 状态转换
         if status == "PASS":
@@ -112,9 +81,9 @@ def save_results_as_allure(test_results):
         start_time = base_time + workflow_offset + case_index * 1000
         stop_time = start_time + 500
 
-        # 创建唯一标识符 - 关键修改！
+        # 创建唯一标识符 ！
         unique_test_id = f"{sheet_name}_{test_case_id}"
-        import time
+
         current_time = int(time.time() * 1000000)
         unique_uuid = f"{sheet_name}-{test_case_id}-{current_time}"
 
@@ -131,7 +100,7 @@ def save_results_as_allure(test_results):
                 "muted": False,
                 "flaky": False,
                 "message": "请查看Log日志..." if status != "PASS" else None,
-                "trace": "请查看Log日志..." if status != "PASS" else None
+                "trace": "请查看Log日志..." if status != "PASS" else None,
             },
             "start": start_time,
             "stop": stop_time,
@@ -144,17 +113,16 @@ def save_results_as_allure(test_results):
                 {"name": "suite", "value": sheet_name},
                 {"name": "feature", "value": description},
                 {"name": "story", "value": unique_test_id},
-
                 # 其他标签
                 {"name": "severity", "value": "normal"},
                 {"name": "framework", "value": "pytest"},
                 {"name": "language", "value": "python"},
-                {"name": "package", "value": f"tests.{sheet_name}"}
+                {"name": "package", "value": f"tests.{sheet_name}"},
             ],
             "links": [],
             "parameters": [
                 {"name": "工作表", "value": sheet_name},
-                {"name": "用例ID", "value": test_case_id}
+                {"name": "用例ID", "value": test_case_id},
             ],
             "steps": [
                 {
@@ -162,14 +130,13 @@ def save_results_as_allure(test_results):
                     "status": allure_status,
                     "start": start_time,
                     "stop": stop_time,
-                    "steps": []
+                    "steps": [],
                 }
-            ]
+            ],
         }
-
         # 保存文件
         result_file = f"./allure-results/{unique_uuid}-result.json"
-        with open(result_file, 'w', encoding='utf-8') as f:
+        with open(result_file, "w", encoding="utf-8") as f:
             json.dump(allure_result, f, ensure_ascii=False, indent=2)
 
         # 记录suite文件统计
@@ -180,7 +147,7 @@ def save_results_as_allure(test_results):
         print(f"✓ 保存到Suite [{sheet_name}]: {test_case_id}")
 
     # 最终统计
-    print(f"\n=== SUITE最终统计 ===")
+    print("\n=== SUITE最终统计 ===")
     total_files = 0
     for suite, files in suite_files.items():
         print(f"Suite [{suite}]: {len(files)} 个文件")
@@ -189,8 +156,6 @@ def save_results_as_allure(test_results):
     print(f"总文件数: {total_files}")
     print(f"期望文件数: {len(test_results)}")
 
-    # 验证实际生成的文件
-    import glob
     actual_files = glob.glob("./allure-results/*-result.json")
     print(f"实际生成文件数: {len(actual_files)}")
 
@@ -205,15 +170,17 @@ def save_results_as_allure(test_results):
     environment_info = {
         "python_version": sys.version,
         "platform": sys.platform,
-        "timestamp": datetime.now().isoformat()
+        "timestamp": datetime.now().isoformat(),
     }
 
-    with open("./allure-results/environment.properties", 'w', encoding='utf-8') as f:
+    with open(
+        "./allure-results/environment.properties", "w", encoding="utf-8"
+    ) as f:
         for key, value in environment_info.items():
             f.write(f"{key}={value}\n")
 
 
-# """生成Allure报告"""
+"""生成Allure报告"""
 def generate_allure_report():
     try:
         print("=== 开始生成Allure报告 ===")
@@ -224,7 +191,9 @@ def generate_allure_report():
             return None
 
         # 检查allure-results目录中是否有文件
-        result_files = [f for f in os.listdir("./allure-results") if f.endswith('.json')]
+        result_files = [
+            f for f in os.listdir("./allure-results") if f.endswith(".json")
+        ]
         if not result_files:
             print("❌ allure-results目录中没有测试结果文件")
             return None
@@ -237,19 +206,26 @@ def generate_allure_report():
                 ["allure", "--version"],
                 capture_output=True,
                 text=True,
-                shell=True
+                shell=True,
             )
 
             if version_result.returncode == 0:
                 print(f"✓ Allure版本: {version_result.stdout.strip()}")
 
                 # 清理并生成报告（使用与手动命令相同的逻辑）
-                result = subprocess.run([
-                    "allure", "generate",
-                    "./allure-results",
-                    "-o", "./allure-report",
-                    "--clean"
-                ], capture_output=True, text=True, shell=True)
+                result = subprocess.run(
+                    [
+                        "allure",
+                        "generate",
+                        "./allure-results",
+                        "-o",
+                        "./allure-report",
+                        "--clean",
+                    ],
+                    capture_output=True,
+                    text=True,
+                    shell=True,
+                )
 
                 if result.returncode == 0:
                     print("✓ Allure报告生成成功！")
@@ -269,22 +245,21 @@ def generate_allure_report():
         return None
 
 
-# """启动Allure本地服务器并返回可访问的URL"""
-
+"""启动Allure本地服务器并返回可访问的URL"""
 def find_available_port(start_port=8080, max_attempts=50):
     """查找可用的端口"""
     for port in range(start_port, start_port + max_attempts):
         try:
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-                s.bind(('localhost', port))
+                s.bind(("localhost", port))
                 return port
         except OSError:
             continue
     return start_port  # 如果都不可用，返回起始端口
 
-
+"""启动Allure服务器，自动处理端口占用"""
 def start_allure_server():
-    """启动Allure服务器，自动处理端口占用"""
+
     try:
         if not os.path.exists("./allure-report"):
             print("❌ 未找到allure-report目录")
@@ -296,12 +271,12 @@ def start_allure_server():
         port = find_available_port(8080)
 
         # 使用指定端口启动allure
-        process = subprocess.Popen(
+        _process = subprocess.Popen(
             ["allure", "open", "./allure-report", "-p", str(port)],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             text=True,
-            shell=True
+            shell=True,
         )
 
         # 获取本机IP
@@ -335,9 +310,8 @@ def start_allure_server():
         return "Allure服务器启动异常"
 
 
-# """在Allure报告生成后发送钉钉消息"""
+"""在Allure报告生成后发送钉钉消息"""
 def send_dingtalk_message_with_report(test_results):
-    import time
 
     # 先生成Allure报告并获取URL
     report_url = generate_allure_report()
@@ -358,8 +332,6 @@ def send_dingtalk_message_with_report(test_results):
         bot = AEUIBot()
         if test_results:
             bot.send_test_results(test_results)
-
-
 
 
 # # 运行测试

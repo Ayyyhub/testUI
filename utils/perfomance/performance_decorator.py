@@ -9,6 +9,7 @@ performance_collector = PerformanceCollector()
 
 # 增强的性能监控————&装饰器&
 
+
 def monitored_performancer(operation_name=None):
     def decorator(func):
         @functools.wraps(func)
@@ -25,7 +26,10 @@ def monitored_performancer(operation_name=None):
                     operation_name=op_name,
                     elapsed_ms=elapsed_ms,
                     success=True,
-                    metadata={"args": str(args)[:100], "kwargs": str(kwargs)[:100]}
+                    metadata={
+                        "args": str(args)[:100],
+                        "kwargs": str(kwargs)[:100],
+                    },
                 )
 
                 logger.debug(f"⏱️ {op_name}: {elapsed_ms:.2f}ms")
@@ -37,7 +41,7 @@ def monitored_performancer(operation_name=None):
                     operation_name=op_name,
                     elapsed_ms=elapsed_ms,
                     success=False,
-                    metadata={"error": str(e), "args": str(args)[:100]}
+                    metadata={"error": str(e), "args": str(args)[:100]},
                 )
                 raise
 

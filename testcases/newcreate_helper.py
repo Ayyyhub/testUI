@@ -1,6 +1,4 @@
 import pytest
-from selenium.webdriver.support.wait import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
 from Log.logger import logger
 from pages.base_page import BasePase
 from utils.wait_clickable import wait_overlays_gone
@@ -22,14 +20,16 @@ class NewcreateHelper:
             wait_overlays_gone(self.driver, timeout=10)
 
             new_clik = driver.find_element(
-                By.XPATH, '//div[@class="icon_and_text" and span[text()="新建"]]')
+                By.XPATH,
+                '//div[@class="icon_and_text" and span[text()="新建"]]',
+            )
             new_clik.click()
             time.sleep(3)
             # 断言
             basepage = BasePase(driver=self.driver)
             tab_info = basepage.get_xinjianNum()
 
-            if tab_info['count'] >= 1:
+            if tab_info["count"] >= 1:
                 logger.info("与预期结果一致,断言新建场景成功")
                 # try:
                 #     logger.info("##### 开始上传模型 #####")

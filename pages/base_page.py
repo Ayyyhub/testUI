@@ -1,9 +1,10 @@
-from selenium import webdriver  # 导入Selenium的webdriver
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 
 from Log.logger import logger
+
+
 class BasePase:
     def __init__(self, driver):
         self.driver = driver
@@ -20,16 +21,18 @@ class BasePase:
             # )
             # 1. 定位标签页容器（精准匹配包含标签项的父容器）
             tab_container = WebDriverWait(self.driver, 10).until(
-                EC.presence_of_element_located((
-                    By.XPATH,
-                    "//div[@class='el-tabs__nav-scroll']/div[@class='el-tabs__nav is-top']"  # 匹配 class 为 el-tabs__nav 和 is-top 的 div
-                ))
+                EC.presence_of_element_located(
+                    (
+                        By.XPATH,
+                        "//div[@class='el-tabs__nav-scroll']/div[@class='el-tabs__nav is-top']",  # 匹配 class 为 el-tabs__nav 和 is-top 的 div
+                    )
+                )
             )
 
             # 2. 在容器内定位所有标签项（匹配多类名的标签项）
             tab_items = tab_container.find_elements(
                 By.CSS_SELECTOR,
-                "div.el-tabs__item.is-top"  # 匹配每个标签项（class 含 el-tabs__item 和 is-top）
+                "div.el-tabs__item.is-top",  # 匹配每个标签项（class 含 el-tabs__item 和 is-top）
             )
 
             # 3. 提取每个标签的名称
@@ -38,8 +41,7 @@ class BasePase:
                 # 容错处理：防止个别标签缺少名称元素导致整体失败
                 try:
                     name_element = item.find_element(
-                        By.CLASS_NAME,
-                        "scene_name_text"
+                        By.CLASS_NAME, "scene_name_text"
                     )
                     tab_names.append(name_element.text.strip())
 
@@ -47,17 +49,17 @@ class BasePase:
                     print(f"提取单个标签名称失败：{str(e)}")
                     tab_names.append("未知标签")  # 标记异常标签
 
-            logger.info(f"标签长度为: {len(tab_items)}，新建场景为: {tab_names[:]}")
+            logger.info(
+                f"标签长度为: {len(tab_items)}，新建场景为: {tab_names[:]}"
+            )
 
             # 4. 返回结构化结果
-            return {
-                "count": len(tab_items),
-                "names": tab_names
-            }
+            return {"count": len(tab_items), "names": tab_names}
 
         except Exception as e:
             print(f"获取标签信息失败：{str(e)}")
             return {"count": 0, "names": []}
+
 
 def set_x_length_by_css_hierarchy(driver):
     try:
@@ -65,31 +67,25 @@ def set_x_length_by_css_hierarchy(driver):
         # 步骤1：定位最外层的 el-form-item 容器
         outer_form = driver.find_element(
             By.CSS_SELECTOR,
-            "div.el-form-item.asterisk-left.el-form-item--label-right"
+            "div.el-form-item.asterisk-left.el-form-item--label-right",
         )
 
         # 步骤2：在 outer_form 内，定位 el-form-item__content
         form_content = outer_form.find_element(
-            By.CSS_SELECTOR,
-            "div.el-form-item__content"
+            By.CSS_SELECTOR, "div.el-form-item__content"
         )
 
         # 步骤3：在 form_content 内，定位 el-input-number
         input_number = form_content.find_element(
-            By.CSS_SELECTOR,
-            "div.el-input-number"
+            By.CSS_SELECTOR, "div.el-input-number"
         )
 
         # 步骤4：在 input_number 内，定位 el-input
-        el_input = input_number.find_element(
-            By.CSS_SELECTOR,
-            "div.el-input"
-        )
+        el_input = input_number.find_element(By.CSS_SELECTOR, "div.el-input")
 
         # 步骤5：在 el_input 内，定位目标输入框 el-input__inner
         target_input = el_input.find_element(
-            By.CSS_SELECTOR,
-            "input.el-input__inner"
+            By.CSS_SELECTOR, "input.el-input__inner"
         )
 
         # 3. 修改输入框的值为 2500

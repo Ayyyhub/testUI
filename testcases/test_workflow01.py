@@ -1,22 +1,18 @@
 import pytest
-from selenium.webdriver import ActionChains
-
-from AEUI_Bot import AEUIBot
 from core.assertion import customed_assertion
 from core.execute_test_data import UITestExecutor
-from testcases.login_helper import Login_Helper
+from testcases.login_helper import LoginHelper
 from testcases.upload_helper import UploadHelper
 from utils.conf_reader import load_config
 from utils.excell_reader import Excellreader
 from Log.logger import logger
-from utils.perfomance.performance_monit import PerformanceMonitor
 
 
 class Test_truework01:
-
-    # def setup_method(self):
-    # self.test_results = []  # 用于存储测试结果
-    # self.current_sheet = "创建工具工作流"  # 当前使用的sheet页名称
+    def __init__(self):
+        self.driver = None  # 构造函数中初始化driver属性
+        self.test_results = []  # 在 __init__ 中初始化
+        self.current_sheet = ""  # 在 __init__ 中初始化
 
     # @pytest.mark.parametrize("test_data", [
     #     pytest.param(data, id=data.test_case_id)
@@ -31,7 +27,7 @@ class Test_truework01:
         logger.info("=== 调试信息：开始执行test_truework01_func ===")
 
         # 1. 执行登录测试
-        test_login_example = Login_Helper()
+        test_login_example = LoginHelper()
         test_login_example.login_func(driver)
         # 1. 执行上传
         upload_test = UploadHelper()
@@ -48,7 +44,7 @@ class Test_truework01:
         self.driver = driver  # 保存driver到实例，后续用self.driver,如果后续有其他方法在同一个类下，无需再传 driver 参数
         # actions = ActionChains(driver)
         config = load_config()
-        excell_path = config['excell_path']
+        excell_path = config["excell_path"]
         excell_reader = Excellreader(excell_path)
         current_sheet = "创建工具工作流"
         test_data_list2 = excell_reader.get_test_data(sheet_name=current_sheet)
@@ -70,13 +66,18 @@ class Test_truework01:
                         # 断言成功 - 继续执行后续代码
                         logger.info("断言成功，操作结束，测试结果汇总:")
                         logger.info(
-                            f"步骤 {data.step_id}: {data.status} - {data.outputed_result}")
+                            f"步骤 {data.step_id}: {data.status} - {data.outputed_result}"
+                        )
                         logger.info("=" * 50 + "\n")
                     else:
                         # 断言失败
-                        logger.info(f"断言失败，跳过后续操作，执行下一个测试用例")
+                        logger.info(
+                            f"断言失败，跳过后续操作，执行下一个测试用例"
+                        )
                         data.status = "FAIL"
-                        data.outputed_result = f"断言失败：预期元素 {data.expected_result} 不可见"
+                        data.outputed_result = (
+                            f"断言失败：预期元素 {data.expected_result} 不可见"
+                        )
 
                 except Exception as e:
                     logger.info(f"执行过程中发生异常: {str(e)}")
@@ -84,12 +85,14 @@ class Test_truework01:
                     continue
 
             # 收集测试结果 - 无论成功失败都记录，使用 execute_step 设置的状态
-            self.test_results.append({
-                'test_case_id': data.test_case_id,
-                'description': data.description,
-                'status': data.status,  # 使用 execute_step 设置的 status
-                'sheet_name': current_sheet,
-            })
+            self.test_results.append(
+                {
+                    "test_case_id": data.test_case_id,
+                    "description": data.description,
+                    "status": data.status,  # 使用 execute_step 设置的 status
+                    "sheet_name": current_sheet,
+                }
+            )
 
         # # 发送测试结果到钉钉
         # bot = AEUIBot()
