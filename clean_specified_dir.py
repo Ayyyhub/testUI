@@ -29,9 +29,4 @@ def cleanup_directories():
             except Exception as e:
                 print(f"清理目录 {dir_path} 时出错: {str(e)}")
         else:
-            # 如果目录不存在，创建它
-            try:
-                os.makedirs(dir_path)
-                print(f"创建目录: {dir_path}")
-            except Exception as e:
-                print(f"创建目录 {dir_path} 时出错: {str(e)}")
+            print(f"目录 {dir_path} 不存在！")

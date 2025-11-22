@@ -2,11 +2,14 @@ import cv2
 import numpy as np
 import pyautogui
 import os
+
 def opencv_screenshot(name, driver):
     try:
-        # 构建完整的截图文件路径
+        # 获取项目根目录的绝对路径（基于当前脚本的位置向上推导）
+        root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        # 拼接根目录下的 screenshoot_dir 路径
+        screenshot_dir = os.path.join(root_dir, "screenshoot_dir")
 
-        screenshot_dir = "screenshoot_dir"
         if not os.path.exists(screenshot_dir):
             os.makedirs(screenshot_dir)
         full_path = os.path.join(screenshot_dir, name)

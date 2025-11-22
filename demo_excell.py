@@ -1,16 +1,11 @@
 from clean_specified_dir import cleanup_directories
-from conftest import driver
-from context_helper import Context_Helper
+from qwen_compare.context_helper import Context_Helper
 # from AEUI_Bot import AEUIBot
 # from conftest import driver
-from core.assertion import customed_assertion
 from core.browser_engine import BrowserEngine
 from core.execute_test_data import UITestExecutor
-from Log.logger import logger
-from image_comparison import ImageComparison
-from opencv import opencv_screenshot
+from qwen_compare.opencv import opencv_screenshot
 from testcases.login_helper import LoginHelper
-from utils import excell_reader
 from utils.conf_reader import load_config
 from utils.excell_reader import Excellreader
 import time

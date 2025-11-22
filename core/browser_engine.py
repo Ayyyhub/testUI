@@ -105,6 +105,17 @@ class BrowserEngine:
         options.add_argument("--no-sandbox")
         options.add_argument("--disable-dev-shm-usage")
         options.add_argument("--window-size=1920,1080")
+        
+        # 添加SSL相关配置以解决握手失败错误
+        # options.add_argument("--ignore-certificate-errors")
+        # options.add_argument("--ignore-ssl-errors")
+        # options.add_argument("--disable-web-security")
+        # options.add_argument("--allow-running-insecure-content")
+        # options.add_argument("--disable-features=VizDisplayCompositor")
+        # options.add_argument("--disable-gpu")
+        # options.add_argument("--disable-software-rasterizer")
+        # options.add_experimental_option("excludeSwitches", ["enable-automation"])
+        # options.add_experimental_option('useAutomationExtension', False)
 
         # 本地开发环境使用你现有的路径
         if platform.system().lower() == "windows" and not os.getenv('JENKINS_HOME'):

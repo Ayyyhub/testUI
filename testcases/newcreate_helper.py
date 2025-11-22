@@ -31,32 +31,6 @@ class NewcreateHelper:
 
             if tab_info["count"] >= 1:
                 logger.info("与预期结果一致,断言新建场景成功")
-                # try:
-                #     logger.info("##### 开始上传模型 #####")
-                #     time.sleep(2)
-                #
-                #     # 等待并关闭可能存在的成功消息弹窗
-                #     try:
-                #         success_messages = driver.find_elements(By.XPATH,
-                #                                                 "//div[contains(@class, 'el-message--success')]")
-                #         if success_messages:
-                #             logger.info("发现成功消息弹窗，等待其消失...")
-                #             # 等待消息自动消失或手动关闭
-                #             WebDriverWait(driver, 10).until(
-                #                 EC.invisibility_of_element_located(
-                #                     (By.XPATH, "//div[contains(@class, 'el-message--success')]"))
-                #             )
-                #             logger.info("成功消息弹窗已消失")
-                #     except Exception as e:
-                #         logger.warning(f"处理成功消息弹窗时出错: {str(e)}")
-                #
-                #     wait = WebDriverWait(driver, 10)
-                #
-                #     # 点击上传按钮
-                #     element = wait.until(EC.element_to_be_clickable(
-                #         (By.XPATH, '//li[contains(@class,"el-menu-item")][5]/div//span[text()="上传"]')))
-                #     element.click()
-                # except Exception as e:
-                #     print(e)
+
         except Exception as e:
             print(e)

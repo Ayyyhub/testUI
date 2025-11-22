@@ -224,7 +224,7 @@ if __name__ == "__main__":
 # # 运行测试
 # pytest demo1_allure.py -v --alluredir=./allure-results
 # pytest testcase/ -v --alluredir=./allure-results
-# python test_main.py -v --alluredir=./allure-results
+# python main.py -v --alluredir=./allure-results
 #
 # # 生成报告 -o: output
 # allure generate ./allure-results -o ./allure-report --clean

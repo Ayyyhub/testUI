@@ -8,8 +8,32 @@ import subprocess
 import time
 import socket
 import glob
+import base64
 
+def format_ai_analysis(ai_data):
+    """
+    专门处理AI分析结果中的换行符号，保持其他数据结构不变
+    只将字符串中的 '\\n' 转换为实际的换行符 '\n'
+    """
+    if ai_data is None:
+        return ""
 
+    # 如果是字符串，处理其中的换行符号
+    if isinstance(ai_data, str):
+        # 只替换换行符号，保持其他内容不变
+        return ai_data.replace('\\n', '\n')
+
+    # 如果是列表，递归处理每个元素
+    elif isinstance(ai_data, list):
+        return [format_ai_analysis(item) for item in ai_data]
+
+    # 如果是字典，递归处理每个值
+    elif isinstance(ai_data, dict):
+        return {key: format_ai_analysis(value) for key, value in ai_data.items()}
+
+    # 其他类型直接返回
+    else:
+        return ai_data
 
 """将测试结果保存为Allure格式"""
 def save_results_as_allure(test_results):
@@ -24,7 +48,7 @@ def save_results_as_allure(test_results):
     for test_case in test_results:
         sheet_name = test_case.get("sheet_name", "未知工作表")
         suite_distribution[sheet_name] = (
-            suite_distribution.get(sheet_name, 0) + 1
+                suite_distribution.get(sheet_name, 0) + 1
         )
 
     print("=== SUITE分布统计:")
@@ -36,7 +60,7 @@ def save_results_as_allure(test_results):
         shutil.rmtree("./allure-results")
     os.makedirs("./allure-results", exist_ok=True)
 
-    # 为每个工作流分配唯一的偏移量
+    # 为每个工作流分配唯一偏移量
     workflow_offsets = {}
     current_offset = 0
     for test_case in test_results:
@@ -47,9 +71,8 @@ def save_results_as_allure(test_results):
 
     print(f"=== SUITE偏移量配置: {workflow_offsets}")
 
-    # 为每个测试用例创建详细的Allure结果
     case_counters = {}
-    suite_files = {}  # 按suite记录文件
+    suite_files = {}
 
     for i, test_case in enumerate(test_results):
         test_case_id = test_case.get("test_case_id", f"test-case-{i}")
@@ -57,6 +80,10 @@ def save_results_as_allure(test_results):
         status = test_case.get("status", "unknown")
         sheet_name = test_case.get("sheet_name", "未知工作表")
 
+        click_logs = test_case.get("click_logs", "")
+        assert_logs = test_case.get("assert_logs", "")
+        ai_analysis_result = test_case.get("AI_analysis", "")  # ⭐AI分析字段
+        screenshot_base64 = test_case.get("screenshot_base64", "")
         # 状态转换
         if status == "PASS":
             allure_status = "passed"
@@ -75,15 +102,13 @@ def save_results_as_allure(test_results):
 
         case_index = case_counters[sheet_name]
 
-        # 时间戳计算
+        # 时间戳
         base_time = 1700000000000
         workflow_offset = workflow_offsets.get(sheet_name, 0)
         start_time = base_time + workflow_offset + case_index * 1000
         stop_time = start_time + 500
 
-        # 创建唯一标识符 ！
         unique_test_id = f"{sheet_name}_{test_case_id}"
-
         current_time = int(time.time() * 1000000)
         unique_uuid = f"{sheet_name}-{test_case_id}-{current_time}"
 
@@ -91,29 +116,76 @@ def save_results_as_allure(test_results):
         print(f"    UUID: {unique_uuid}")
         print(f"    historyId: {unique_test_id}")
 
-        # 创建测试结果 - 特别注意labels结构
+        # 构建状态详情
+        status_details = {
+            "known": False,
+            "muted": False,
+            "flaky": False,
+            "message": None,
+            "trace": None
+        }
+
+        # message：点击日志（失败原因）
+        if status != "PASS":
+            status_details["message"] = click_logs if click_logs else "执行失败，请查看 Log 日志..."
+
+        # trace：断言日志 + AI 分析
+        trace_parts = []
+
+        ai_newline_result=format_ai_analysis(ai_analysis_result)
+
+        if assert_logs:
+            trace_parts.append("【断言日志】\n" + assert_logs)
+
+        if ai_analysis_result:
+            trace_parts.append("【AI 分析】\n" + ai_newline_result)
+
+        # # 如果有截图Base64数据，添加到trace
+        # if screenshot_base64:
+        #     trace_parts.append(f"【截图】\ndata:image/png;base64,{screenshot_base64}")
+
+        if trace_parts:
+            status_details["trace"] = "\n\n".join(trace_parts).strip()
+        else:
+            status_details["trace"] = "无断言日志或AI分析内容"
+
+        attachments = []  # 存储附件列表
+        if screenshot_base64:
+            try:
+                # 将Base64数据保存为图片文件
+                screenshot_filename = f"{unique_uuid}-screenshot.png"
+                screenshot_filepath = f"./allure-results/{screenshot_filename}"
+
+                # 解码Base64数据并保存为文件
+                screenshot_data = base64.b64decode(screenshot_base64)
+                with open(screenshot_filepath, 'wb') as f:
+                    f.write(screenshot_data)
+
+                # 将文件路径添加到附件列表中
+                attachments.append({
+                    "name": screenshot_filename,
+                    "source": screenshot_filename,
+                    "type": "image/png"
+                })
+                print(f"✓ 截图已保存为附件: {screenshot_filename}")
+            except Exception as e:
+                print(f"❌ 截图保存失败: {e}")
+
+        # 生成Allure报告的JSON数据
         allure_result = {
             "name": f"{test_case_id}: {description}",
             "status": allure_status,
-            "statusDetails": {
-                "known": False,
-                "muted": False,
-                "flaky": False,
-                "message": "请查看Log日志..." if status != "PASS" else None,
-                "trace": "请查看Log日志..." if status != "PASS" else None,
-            },
+            "statusDetails": status_details,
             "start": start_time,
             "stop": stop_time,
             "uuid": unique_uuid,
-            "historyId": unique_test_id,  # 必须唯一，否则会覆盖
-            "testCaseId": unique_test_id,  # 必须唯一，否则会覆盖
+            "historyId": unique_test_id,
+            "testCaseId": unique_test_id,
             "fullName": f"{sheet_name}.{test_case_id}",
             "labels": [
-                # Suite相关标签 - 控制层级结构
                 {"name": "suite", "value": sheet_name},
                 {"name": "feature", "value": description},
                 {"name": "story", "value": unique_test_id},
-                # 其他标签
                 {"name": "severity", "value": "normal"},
                 {"name": "framework", "value": "pytest"},
                 {"name": "language", "value": "python"},
@@ -126,27 +198,36 @@ def save_results_as_allure(test_results):
             ],
             "steps": [
                 {
-                    "name": f"执行{test_case_id}",
+                    "name": f" === 截图显示:{test_case_id} ===",
                     "status": allure_status,
                     "start": start_time,
                     "stop": stop_time,
                     "steps": [],
+                    "attachments": attachments  # 将附件添加到步骤中
                 }
             ],
         }
-        # 保存文件
+
+        # 保存Allure报告的JSON文件
         result_file = f"./allure-results/{unique_uuid}-result.json"
         with open(result_file, "w", encoding="utf-8") as f:
             json.dump(allure_result, f, ensure_ascii=False, indent=2)
 
-        # 记录suite文件统计
+        print(f"✓ 保存到Suite [{sheet_name}]: {test_case_id}")
+
+        result_file = f"./allure-results/{unique_uuid}-result.json"
+        with open(result_file, "w", encoding="utf-8") as f:
+            json.dump(allure_result, f, ensure_ascii=False, indent=2)
+
+        # 记录 suite
         if sheet_name not in suite_files:
             suite_files[sheet_name] = []
         suite_files[sheet_name].append(result_file)
 
         print(f"✓ 保存到Suite [{sheet_name}]: {test_case_id}")
 
-    # 最终统计
+
+    # 统计
     print("\n=== SUITE最终统计 ===")
     total_files = 0
     for suite, files in suite_files.items():
@@ -161,23 +242,22 @@ def save_results_as_allure(test_results):
 
     if len(actual_files) != len(test_results):
         print("⚠️ 警告: 文件数量不匹配! 可能存在覆盖")
-        # 列出所有生成的文件
-        print("生成的文件列表:")
         for file in actual_files:
             print(f"  {file}")
 
-    # 环境信息文件
+    # 环境信息
     environment_info = {
         "python_version": sys.version,
         "platform": sys.platform,
         "timestamp": datetime.now().isoformat(),
     }
-
     with open(
         "./allure-results/environment.properties", "w", encoding="utf-8"
     ) as f:
         for key, value in environment_info.items():
             f.write(f"{key}={value}\n")
+
+
 
 
 """生成Allure报告"""
@@ -335,7 +415,7 @@ def send_dingtalk_message_with_report(test_results):
 
 
 # # 运行测试
-# python test_main.py -v --alluredir=./allure-results
+# python main.py -v --alluredir=./allure-results
 #
 # # 生成报告 -o: output
 # allure generate ./allure-results -o ./allure-report --clean

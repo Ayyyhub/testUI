@@ -1,7 +1,7 @@
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-
+from Log.logger import logger
 from core.execute_test_data import UITestExecutor
 
 
@@ -23,7 +23,7 @@ class customed_assertion:
         except Exception as e:
             # print(f"当前定位方式{determine_struct}")
             # print(f"当前定位方式{a},{b}")
-            print(f"断言失败，元素不可见：{str(e)}")
+            logger.info(f"断言失败，元素不可见：{str(e)}")
             return False  # 断言失败返回False
 
 
@@ -39,7 +39,7 @@ class customed_assertion:
             )
             return True
         except Exception as e:
-            print(f"断言失败,弹窗未关闭：{str(e)}")
+            logger.info(f"断言失败,弹窗未关闭：{str(e)}")
             return False
 
 

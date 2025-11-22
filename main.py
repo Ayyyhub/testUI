@@ -4,8 +4,6 @@ from clean_specified_dir import cleanup_directories
 from core.browser_engine import BrowserEngine
 from Log.logger import logger
 
-from testcases.test_workflow01 import Test_truework01
-from testcases.test_workflow02 import Test_truework02
 from testcases.test_workflow03 import Test_truework03
 
 # 封装命令，保存结果至报告，发送消息至dingding
@@ -23,6 +21,9 @@ def run_main(browser_driver, is_allure_mode=False):
     """
     try:
         logger.info("=== 调试信息：开始执行run_main函数 ===")
+
+        # 清理截图文件和ai分析结果
+        cleanup_directories()
 
         # 初始化钉钉机器人
         bot = AEUIBot()
@@ -89,21 +90,19 @@ if __name__ == "__main__":
         browser_engine = BrowserEngine()
         driver = browser_engine.initialize_driver()
 
-        cleanup_directories()
-
         try:
             # 执行测试（传递is_allure_mode=True参数，避免重复发送钉钉消息）
-            test_results_allure = run_main(driver, is_allure_mode=True)
+            test_results_toallure = run_main(driver, is_allure_mode=True)
             # print(f"\n=== 调试信息查看test_miansresults数据结构: {test_results_allure} ===\n")
 
-            if test_results_allure:
+            if test_results_toallure:
                 # 将测试结果保存为Allure格式
-                save_results_as_allure(test_results_allure)
+                save_results_as_allure(test_results_toallure)
 
                 # 在报告生成后发送钉钉消息
-                send_dingtalk_message_with_report(test_results_allure)
+                send_dingtalk_message_with_report(test_results_toallure)
             else:
-                logger.info("❌ 没有收集到测试结果，跳过报告生成和消息发送")
+                logger.info("没有收集到测试结果，跳过报告生成和消息发送")
 
         except Exception as e:
             logger.info(f"❌ 测试执行过程中发生错误: {e}")
@@ -116,8 +115,6 @@ if __name__ == "__main__":
         browser_engine = BrowserEngine()
         driver = browser_engine.initialize_driver()
         try:
-            run_main(
-                driver
-            )  # 传入手动创建的 driver（默认is_allure_mode=False）
+            run_main(driver)
         finally:
             driver.quit()  # 测试结束后关闭浏览器

@@ -18,13 +18,14 @@ class AEUIBot:
 
         self.headers = {"Content-Type": "application/json"}
 
+    """格式化测试结果"""
     def format_test_results(
         self,
         format_result: List[Dict],
         report_url: str = None,
-        format_sheetname: str = None,
+        # format_sheetname: str = None,
     ) -> str:
-        """格式化测试结果"""
+
         # 统计测试结果
         total_cases = len(format_result)
         passed_cases = sum(
@@ -36,21 +37,21 @@ class AEUIBot:
         )
 
         # 按sheet名称分组统计
-        sheet_stats = {}
+        sheet_group = {}
         for case in format_result:
             sheet_name = case.get("sheet_name", "未知工作表")
-            if sheet_name not in sheet_stats:
-                sheet_stats[sheet_name] = {
+            if sheet_name not in sheet_group:
+                sheet_group[sheet_name] = {
                     "total": 0,
                     "passed": 0,
                     "failed": 0,
                 }
 
-            sheet_stats[sheet_name]["total"] += 1
+            sheet_group[sheet_name]["total"] += 1
             if case.get("status") == "PASS":
-                sheet_stats[sheet_name]["passed"] += 1
+                sheet_group[sheet_name]["passed"] += 1
             else:
-                sheet_stats[sheet_name]["failed"] += 1
+                sheet_group[sheet_name]["failed"] += 1
 
         # 获取失败的测试用例详情（按sheet名称分组）
         failed_details_by_sheet = {}
@@ -61,8 +62,10 @@ class AEUIBot:
                     failed_details_by_sheet[sheet_name] = []
 
                 failed_details_by_sheet[sheet_name].append(
-                    f"- 用例ID: {case.get('test_case_id')}\n  描述: {case.get('description')}\n  失败原因: {'请查看Log日志...'}"
+                    f"- 失败用例ID: {case.get('test_case_id')}\n  描述: {case.get('description')}\n  失败原因: {'请查看Log日志...'}"
                 )
+
+        print(f"看看你长啥样：{failed_details_by_sheet}")
 
         # 构建消息内容
         message = (
@@ -75,9 +78,9 @@ class AEUIBot:
         )
 
         # 添加各sheet的统计信息
-        if sheet_stats:
+        if sheet_group:
             message += "\n### ✅ 各工作表统计\n"
-            for sheet_name, stats in sheet_stats.items():
+            for sheet_name, stats in sheet_group.items():
                 sheet_success_rate = (
                     (stats["passed"] / stats["total"] * 100)
                     if stats["total"] > 0
@@ -122,13 +125,14 @@ class AEUIBot:
 
         return message
 
+    """发送测试结果到钉钉"""
     def send_test_results(
         self,
         result: List[Dict],
         report_url: str = None,
         sheet_name: str = None,
     ) -> bool:
-        """发送测试结果到钉钉"""
+
         try:
             # print(f" AE_Bot.send_test_results 调试信息：开始发送测试结果 ===")
             # print(f" AE_Bot.send_test_results 测试结果数量：{len(result)}")

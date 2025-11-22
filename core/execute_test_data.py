@@ -97,9 +97,11 @@ class UITestExecutor:
                 )
             return (by, determin_value)
 
+
+    """根据测试步骤执行UI操作（兼容分层定位和连续操作）"""
     # @monitored_performancer("execute_step")
     def execute_step(self, step):
-        """根据测试步骤执行UI操作（兼容分层定位和连续操作）"""
+
         try:
             logger.info(
                 f"execute_step 步骤 {step.step_id}: {step.description}"
