@@ -61,11 +61,11 @@ class AEUIBot:
                 if sheet_name not in failed_details_by_sheet:
                     failed_details_by_sheet[sheet_name] = []
 
-                failed_details_by_sheet[sheet_name].append(
-                    f"- 失败用例ID: {case.get('test_case_id')}\n  描述: {case.get('description')}\n  失败原因: {'请查看Log日志...'}"
-                )
-
-        print(f"看看你长啥样：{failed_details_by_sheet}")
+                # failed_details_by_sheet[sheet_name].append(
+                #     f"- 失败用例ID: {case.get('test_case_id')}\n  描述: {case.get('description')}\n  失败原因: {'请查看Log日志...'}"
+                # )
+                failed_details_by_sheet[sheet_name].append(case.get('test_case_id'))
+        # print(f"看看你长啥样：{failed_details_by_sheet}")
 
         # 构建消息内容
         message = (
@@ -101,7 +101,8 @@ class AEUIBot:
                 failed_cases_list,
             ) in failed_details_by_sheet.items():
                 message += f"\n**{sheet_name}失败用例:**\n"
-                message += "\n".join(failed_cases_list)
+                # message += "\n".join(failed_cases_list)
+                message += f"- {'、'.join(failed_cases_list)}"
 
         # 加入Allure报告链接
         if report_url and report_url.startswith("http"):

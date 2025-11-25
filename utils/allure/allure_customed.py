@@ -140,10 +140,6 @@ def save_results_as_allure(test_results):
         if ai_analysis_result:
             trace_parts.append("【AI 分析】\n" + ai_newline_result)
 
-        # # 如果有截图Base64数据，添加到trace
-        # if screenshot_base64:
-        #     trace_parts.append(f"【截图】\ndata:image/png;base64,{screenshot_base64}")
-
         if trace_parts:
             status_details["trace"] = "\n\n".join(trace_parts).strip()
         else:
@@ -170,6 +166,24 @@ def save_results_as_allure(test_results):
                 print(f"✓ 截图已保存为附件: {screenshot_filename}")
             except Exception as e:
                 print(f"❌ 截图保存失败: {e}")
+
+        # 添加AI分析文本附件
+        if ai_analysis_result:
+            try:
+                ai_text_filename = f"{unique_uuid}-ai-analysis.txt"
+                ai_text_filepath = f"./allure-results/{ai_text_filename}"
+
+                with open(ai_text_filepath, 'w', encoding='utf-8') as f:
+                    f.write(ai_newline_result)
+
+                attachments.append({
+                    "name": f"AI分析-{test_case_id}",
+                    "source": ai_text_filename,
+                    "type": "text/plain"
+                })
+                print(f"✓ AI分析已保存为附件: {ai_text_filename}")
+            except Exception as e:
+                print(f"❌ AI分析附件保存失败: {e}")
 
         # 生成Allure报告的JSON数据
         allure_result = {
@@ -198,7 +212,7 @@ def save_results_as_allure(test_results):
             ],
             "steps": [
                 {
-                    "name": f" === 截图显示:{test_case_id} ===",
+                    "name": f" === 附件查看：{test_case_id} ===",
                     "status": allure_status,
                     "start": start_time,
                     "stop": stop_time,
@@ -256,8 +270,6 @@ def save_results_as_allure(test_results):
     ) as f:
         for key, value in environment_info.items():
             f.write(f"{key}={value}\n")
-
-
 
 
 """生成Allure报告"""

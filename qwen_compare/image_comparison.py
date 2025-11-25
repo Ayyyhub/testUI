@@ -7,13 +7,21 @@ import base64
 import glob
 import asyncio
 import threading
+from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor
 from dashscope import MultiModalConversation
 
 
 class ImageComparison:
     def __init__(self, compare_base_dir="compare_base"):
-        self.compare_base_dir = compare_base_dir
+        self.project_root = Path(__file__).resolve().parent.parent
+        compare_base_path = Path(compare_base_dir)
+        if not compare_base_path.is_absolute():
+            compare_base_path = self.project_root / compare_base_path
+        self.compare_base_dir = compare_base_path
+        self.screenshot_dir = self.project_root / "screenshoot_dir"
+        self.result_dir = self.project_root / "ai_comparison_results"
+        # 线程池
         self.executor = ThreadPoolExecutor(max_workers=3)  # 异步执行器
 
 
@@ -39,12 +47,12 @@ class ImageComparison:
         # print(f"🔍 查找匹配的基准图片，base_name: {base_name}")
 
         # 在compare_base目录中查找
-        pattern = os.path.join(self.compare_base_dir, f"{base_name}*.png")
+        pattern = str(self.compare_base_dir / f"{base_name}*.png")
         matching_files = glob.glob(pattern)
 
         if matching_files:
             # print(f"✅ 在基准目录中找到匹配的图片：{matching_files[0]}")
-            return matching_files[0]  # 返回第一个匹配到的带目录的文件
+            return Path(matching_files[0])  # 返回第一个匹配到的带目录的文件
 
         # print(f"⚠️ 在 {self.compare_base_dir} 下未找到匹配的基准图片: {base_name}")
         return None
@@ -163,13 +171,16 @@ class ImageComparison:
             return f"调用过程抛出异常：{str(e)}"
     
 
-    """异步对比截图和基准图片 - 不阻塞主线程"""
+    """异步调用 ai 分析比较截图 - 不阻塞主线程"""
     def async_compare_images(self, screenshot_path,  context_info=""):
 
         def _async_task():
             try:
-                # 传递完整的截图目录
-                screenshot_exam = os.path.join("../screenshoot_dir", screenshot_path)
+                screenshot_path_obj = Path(screenshot_path)
+                if not screenshot_path_obj.is_absolute():
+                    screenshot_exam = (self.screenshot_dir / screenshot_path_obj).resolve()
+                else:
+                    screenshot_exam = screenshot_path_obj
 
                 # print(f"🚀 准备进行异步AI对比分析：")
 
@@ -178,7 +189,7 @@ class ImageComparison:
                     # print(f"   包含上下文信息：{len(context_info)}字符")
                     analysis_result = self.enhanced_comparison_analysis(screenshot_exam, context_info)
 
-                    # print(f"✅ AssertFailed异步AI对比完成：{analysis_result}")
+                    print(f"🤖  AssertFailed异步AI分析完成：{analysis_result}")
                     self._save_async_result(screenshot_path=screenshot_exam, result=analysis_result)
 
                 # 无上下文，直接查找匹配的基准图片
@@ -191,30 +202,31 @@ class ImageComparison:
                     # 如果没有上下文信息，直接对比
                     analysis_result = self.direct_comparison_analysis(screenshot_exam, base_image_path)
                 
-                    # print(f"✅ Proactive异步AI对比完成：{analysis_result}")
+                    print(f"🤖  Proactive异步AI对比完成：{analysis_result}")
                     # 这里可以添加结果处理逻辑，比如写入日志或数据库
-                    self._save_async_result(base_image_path=base_image_path,screenshot_path=screenshot_exam, result=analysis_result)
+                    self._save_async_result(base_image_path=base_image_path,
+                                            screenshot_path=screenshot_exam,
+                                            result=analysis_result)
                 
             except Exception as e:
-                # print(f"❌ 异步AI对比失败：{str(e)}")
+                print(f"❌ 异步AI对比失败：{str(e)}")
                 return e  #待会删了！
         
-        # 在线程池中异步执行
+        # 在 ===线程池=== 中异步执行
         future = self.executor.submit(_async_task)
         return future
 
     """保存异步对比结果"""
-    def _save_async_result(self, screenshot_path, result, base_image_path=""):
+    def _save_async_result(self, screenshot_path, result, base_image_path=None):
 
         try:
             # 创建结果目录
-            result_dir = "../ai_comparison_results"
-            os.makedirs(result_dir, exist_ok=True)
-            
+            self.result_dir.mkdir(parents=True, exist_ok=True)
+
             # 生成结果文件名
-            filename = os.path.basename(screenshot_path).replace('.png', '_ai_result.txt')
-            result_file = os.path.join(result_dir, filename)
-            
+            filename = screenshot_path.name.replace('.png', '_ai_result.txt')
+            result_file = self.result_dir / filename
+
             # 写入结果
             with open(result_file, 'w', encoding='utf-8') as f:
                 # 判断是断言调用还是主动调用
@@ -226,18 +238,16 @@ class ImageComparison:
                     # 断言调用逻辑：无基准图片
                     f.write(f"对比类型: 断言失败分析\n")
                     f.write(f"基准图片：无（断言失败分析）\n")
-                
+
                 f.write(f"截图文件: {screenshot_path}\n")
-                f.write(f"对比时间: {os.path.basename(screenshot_path).split('_')[-1].replace('.png', '')}\n")
+                f.write(f"对比时间: {screenshot_path.name.split('_')[-1].replace('.png', '')}\n")
                 f.write(f"AI对比结果: {result}\n")
                 f.write("=" * 50 + "\n")
-            
-            # print(f"📄 异步对比结果已保存：{result_file}")
+
+            # print(f"📄 ai异步对比结果已保存：{result_file}")
             
         except Exception as e:
-            # print(f"⚠️ 保存异步结果失败：{str(e)}")
+            print(f"⚠️ 保存异步结果失败：{str(e)}")
             return e # 待会删了!
-
-
 
 

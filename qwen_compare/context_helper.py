@@ -4,20 +4,20 @@ class Context_Helper:
 
 
     @staticmethod
-    def async_ai_comparison(screenshot_path, current_data=None, test_data_list=None):
+    def async_ai_comparison(screenshot_path, current_data=None, context_data_list=None):
         """
         Args:
             screenshot_path: 截屏图片路径
             current_data: 当前测试数据（用于断言失败场景，可选）
-            test_data_list: 测试数据上下文列表（用于断言失败场景，可选）:"[()]"
+            context_data_list: 测试数据上下文列表（用于断言失败场景，可选）:"[()]"
         """
         try:
             comparator = ImageComparison()
             context_info = ""
 
             # ==== 判断是否需要上下文，如有上下文 ====
-            if current_data and test_data_list:
-                context_data = Context_Helper.get_context_data(current_data, test_data_list, 2)
+            if current_data and context_data_list:
+                context_data = Context_Helper.get_context_data(current_data, context_data_list, 2)
                 context_info = Context_Helper.format_context_for_ai(context_data, current_data.step_id)
                 print(f"📋 已添加上下文信息到AI分析（{len(context_data)}个步骤）")
             else:
@@ -25,7 +25,7 @@ class Context_Helper:
 
             # ==== 异步调用AI对比 ====
             comparator.async_compare_images(screenshot_path, context_info=context_info)
-            # print(f"🚀 AI分析任务已提交（异步执行）: {screenshot_path}")
+            print(f"🚀 AI分析任务已提交（异步执行）: {screenshot_path}")
             # print("    主流程继续执行，不受AI分析影响")
 
         except Exception as e:
@@ -35,11 +35,11 @@ class Context_Helper:
 
     """获取当前测试步骤的上下文数据"""
     @staticmethod
-    def get_context_data(current_data, test_data_list, context_range)-> List:
+    def get_context_data(current_data, context_data_list, context_range)-> List:
 
         try:
             current_index = next(
-                (i for i, d in enumerate(test_data_list)
+                (i for i, d in enumerate(context_data_list)
                  if d.step_id == current_data.step_id and d.test_case_id == current_data.test_case_id),
                 -1
             )
@@ -48,8 +48,8 @@ class Context_Helper:
                 return []
 
             start_index = max(0, current_index - context_range)
-            end_index = min(len(test_data_list), current_index + context_range + 1)
-            context_data = test_data_list[start_index:end_index]
+            end_index = min(len(context_data_list), current_index + context_range + 1)
+            context_data = context_data_list[start_index:end_index]
 
             # print(f"📋 获取到上下文数据: 步骤 {current_data.step_id} 附近共 {len(context_data)} 个步骤")
             for i, data in enumerate(context_data):

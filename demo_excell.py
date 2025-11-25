@@ -94,7 +94,7 @@ class demo:
                                 # 调用异步ai分析图片断言失败原因（断言失败需要需要上下文）
                                 Context_Helper.async_ai_comparison(screenshot_path=assertfail_screenshot_name,
                                                                    current_data=data,
-                                                                   test_data_list=context_data_list)
+                                                                   context_data_list=context_data_list)
                             except Exception as screenshot_error:
                                 print(f"❌ 断言截屏失败：{str(screenshot_error)}")
 
@@ -142,7 +142,7 @@ class demo:
                                 # 调用异步ai分析图片断言失败原因（断言失败需要需要上下文）
                                 Context_Helper.async_ai_comparison(screenshot_path=assertfail_screenshot_name,
                                                                    current_data=data,
-                                                                   test_data_list=context_data_list)
+                                                                   context_data_list=context_data_list)
                             except Exception as screenshot_error:
                                 print(f"❌ 断言截屏失败：{str(screenshot_error)}")
 
