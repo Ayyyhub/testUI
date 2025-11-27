@@ -102,6 +102,13 @@ class UITestExecutor:
     # @monitored_performancer("execute_step")
     def execute_step(self, step):
 
+        global logger
+        logger = logger.bind(
+            case=getattr(step, "test_case_id", "-"),
+            sheet=getattr(step, "sheet_name", "-"),
+            step=step.step_id,
+        )
+
         try:
             logger.info(
                 f"execute_step 步骤 {step.step_id}: {step.description}"

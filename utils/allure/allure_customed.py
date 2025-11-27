@@ -84,6 +84,7 @@ def save_results_as_allure(test_results):
         assert_logs = test_case.get("assert_logs", "")
         ai_analysis_result = test_case.get("AI_analysis", "")  # ⭐AI分析字段
         screenshot_base64 = test_case.get("screenshot_base64", "")
+        case_log_text = test_case.get("case_log_text", "")
         # 状态转换
         if status == "PASS":
             allure_status = "passed"
@@ -167,6 +168,22 @@ def save_results_as_allure(test_results):
             except Exception as e:
                 print(f"❌ 截图保存失败: {e}")
 
+        # 判断Log日志...
+        if case_log_text:
+            try:
+                case_log_filename = f"{unique_uuid}-case-log.txt"
+                case_log_filepath = f"./allure-results/{case_log_filename}"
+                with open(case_log_filepath, 'w', encoding='utf-8') as f:
+                    f.write(case_log_text)
+                attachments.append({
+                    "name": f"Log日志--{test_case_id}",
+                    "source": case_log_filename,
+                    "type": "text/plain"
+                })
+                print(f"✓ 用例日志已保存为附件: {case_log_filename}")
+            except Exception as e:
+                print(f"❌ 用例日志附件保存失败: {e}")
+
         # 添加AI分析文本附件
         if ai_analysis_result:
             try:
@@ -177,7 +194,7 @@ def save_results_as_allure(test_results):
                     f.write(ai_newline_result)
 
                 attachments.append({
-                    "name": f"AI分析-{test_case_id}",
+                    "name": f"AI分析--{test_case_id}",
                     "source": ai_text_filename,
                     "type": "text/plain"
                 })

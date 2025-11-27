@@ -7,9 +7,9 @@ import requests
 class AEUIBot:
     def __init__(self):
         # 测试
-        # self.api_url = ("https://oapi.dingtalk.com/robot/send?"
-        #                 "access_token=a68d48b561a32ee60470b51"
-        #                 "e979f2dbf7b8bf4681c4fa740de9eaadb44721381")
+        self.api_url = ("https://oapi.dingtalk.com/robot/send?"
+                        "access_token=a68d48b561a32ee60470b51"
+                        "e979f2dbf7b8bf4681c4fa740de9eaadb44721381")
 
         # 生产
         # self.api_url = ("https://oapi.dingtalk.com/robot/send?"
